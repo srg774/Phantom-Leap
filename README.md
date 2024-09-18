@@ -1,5 +1,7 @@
 # Developing a Cross Platform Game 2.0 🎃👻
 
+**https://srg774.github.io/Phantom-Leap/**
+
 Encouraged by the positive feedback from friends and family regarding the first iteration of the platform game I created, I decided to take it to the next level. Now, I’m approaching what may be the conclusion of my current game development project!
 
 ## Overview
@@ -18,7 +20,7 @@ The coffin was generated using Crayon AI, while the star background, text, and r
 
 ## Development Process
 
-I will provide a screenshot of the assets as a snapshot. This stage took another 7 hours of iterations and tweaks with ChatGPT. I developed everything offline this time on my Chromebook, using a text editor and running the `index.html` file to test the game before uploading it to GitHub directly. The process included a lot of page refreshes and, unlike my previous project which had 192 comments and 87 hours of work, this time it was a single deployment that worked almost right away. The music needed a couple of page refreshes to load properly.
+This stage took another 7 hours of iterations and tweaks with ChatGPT. I developed everything offline this time on my Chromebook, using a text editor and running the `index.html` file to test the game before uploading it to GitHub directly. The process included a lot of page refreshes and, unlike my previous project which had 192 deplys and 7 hours of work, this time it was a single deployment that worked almost right away. The music needed a couple of page refreshes to load properly.
 
 ## Sound and Music
 
