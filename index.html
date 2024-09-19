@@ -12,65 +12,58 @@
     <link rel="manifest" href="https://srg774.github.io/Phantom-Leap/manifest.json">
     
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000000; /* Black background */
-            color: #FFFFFF; /* Set text color to white */
-            font-family: 'Creepster', sans-serif; /* Use a Halloween-style font */
-            text-align: center; /* Center align text and button */
-        }
-        #gameCanvas {
-            display: block;
-            background-color: #000000; /* Canvas background black */
-            margin: 0 auto; /* Center the canvas horizontally */
-        }
-        #restartButton {
-            display: none;
-            position: fixed; /* Fixed position to stay in place when scrolling */
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            font-size: 22px;
-            background-color: #000000; /* Button background black */
-            color: #00FF00; /* Neon green text color */
-            border: 3px solid #00FF00; /* Neon green border */
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Black and green glowing effect */
-            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-        }
-        #restartButton:hover {
-            background-color: #00FF00; /* Neon green background on hover */
-            color: #000000; /* Black text color on hover */
-            transform: translateX(-50%) scale(1.05); /* Slightly enlarge on hover */
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
-        }
-        @font-face {
-            font-family: 'Creepster';
-            src: url('assets/Creepster-Regular.ttf') format('truetype');
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            #restartButton {
-                font-size: 18px;
-                padding: 12px 25px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            #restartButton {
-                font-size: 16px;
-                padding: 10px 20px;
-            }
-        }
+        /* Your existing styles here */
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
     <script src="game.js"></script>
+    <script>
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); // Prevent the default mini-infobar
+            deferredPrompt = e; // Save the event for later use
+            // Optionally, show your custom install button here
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            // Show a custom install button or prompt
+            // For example, you might show a modal or banner prompting users to install
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                // If the app is already installed, don't show the prompt
+                return;
+            }
+            const installButton = document.createElement('button');
+            installButton.textContent = 'Install Phantom Leap';
+            installButton.style.position = 'fixed';
+            installButton.style.bottom = '20px';
+            installButton.style.right = '20px';
+            installButton.style.padding = '10px 20px';
+            installButton.style.backgroundColor = '#00FF00';
+            installButton.style.color = '#000000';
+            installButton.style.border = 'none';
+            installButton.style.borderRadius = '8px';
+            installButton.style.cursor = 'pointer';
+            document.body.appendChild(installButton);
+
+            installButton.addEventListener('click', () => {
+                // Show the install prompt
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the A2HS prompt');
+                        } else {
+                            console.log('User dismissed the A2HS prompt');
+                        }
+                        deferredPrompt = null; // Clear the saved prompt
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>
