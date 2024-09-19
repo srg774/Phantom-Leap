@@ -1,8 +1,12 @@
-
-self.addEventListener('install', event => {
-    console.log('Service worker for Phantom Leap installing...');
+self.addEventListener('install', (event) => {
+  console.log('Service Worker installed.');
+  // You can cache assets here if needed
 });
 
-self.addEventListener('activate', event => {
-    console.log('Service worker for Phantom Leap activating...');
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activated.');
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request));
 });
