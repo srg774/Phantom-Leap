@@ -269,174 +269,114 @@ window.onload = function() {
             // Determine the message based on the souls count
             let endMessage;
             if (souls < 100) {
-                endMessage = "Ghosted!";
-            } else if (souls < 300) {
-                endMessage = "Spooky Score!";
+                endMessage = "Ghosts took your soul. Try again!";
+            } else if (souls < 200) {
+                endMessage = "Almost there! Ghosts nearly caught you!";
             } else {
-                endMessage = "Hauntingly Good!";
+                endMessage = "Congratulations! You escaped the ghosts!";
             }
 
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
-            ctx.font = '50px Creepster';
+            ctx.fillStyle = 'red';
+            ctx.font = '40px Creepster';
             ctx.textAlign = 'center';
-
-            // Apply red glow effect
-            ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
-            ctx.shadowBlur = 15;
-
-            ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 60);
-
-            // Display the end message based on the souls count
-            ctx.font = '20px Creepster';
-            ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2 - 20);
-
-            // Display the souls count
-            ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
-
-            // Display the new text "By S.Gilchrist 2024 CC-BY-NC 4.0"
-            ctx.font = '16px Creepster';
-            ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 60);
-
+            ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2);
             restartButton.style.display = 'block';
-
-            // Reset shadow for other drawings
-            ctx.shadowColor = 'transparent';
-
-            // Stop the background music
-            themeMusic.pause();
-            themeMusic.currentTime = 0;
-
             return;
         }
 
-        playerVelocityY += gravity;
-        if (playerVelocityY > maxSpeed) playerVelocityY = maxSpeed;
-
-        playerY += playerVelocityY;
-        playerX += playerVelocityX;
-
-        if (playerX < 0) playerX = 0;
-        if (playerX + playerWidth > canvas.width) playerX = canvas.width - playerWidth;
-        if (playerY < 0) playerY = 0;
-
-        if (playerVelocityY < 0) {
-            currentPlayerImage = playerImageJump;
-        } else if (playerVelocityX < 0) {
-            currentPlayerImage = playerImageLeft;
-        } else if (playerVelocityX > 0) {
-            currentPlayerImage = playerImageRight;
-        } else {
-            currentPlayerImage = playerImageRight;
-        }
-
-        checkBlockCollision();
-        checkGameOver();
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        drawStars();
-        drawPlayer();
-        drawBlocks();
-        drawGhost();
+        // Update player position
+        playerY += playerVelocityY;
+        playerX += playerVelocityX;
+        playerVelocityY += gravity;
 
+        // Update blocks
+        blocks.forEach(block => {
+            block.y += gameSpeed;
+        });
+
+        // Remove off-screen blocks
+        blocks.forEach((block, index) => {
+            if (block.y > canvas.height) {
+                if (!block.missed) {
+                    souls++;
+                }
+                blocks.splice(index, 1);
+            }
+        });
+
+        // Check block collision
+        checkBlockCollision();
+        // Check game over
+        checkGameOver();
+
+        // Draw blocks
+        blocks.forEach(block => {
+            ctx.fillStyle = 'grey';
+            ctx.fillRect(block.x, block.y, block.width, block.height);
+        });
+
+        // Draw player
+        ctx.drawImage(currentPlayerImage, playerX, playerY, playerWidth, playerHeight);
+
+        // Draw ghost if present
+        if (ghostObject) {
+            ghostObject.x += ghostObject.dx;
+            ghostObject.y += ghostObject.dy;
+
+            if (ghostObject.x < 0 || ghostObject.x + ghostObject.size > canvas.width) {
+                ghostObject.dx *= -1;
+            }
+
+            if (ghostObject.y < 0 || ghostObject.y + ghostObject.size > canvas.height) {
+                ghostObject.dy *= -1;
+            }
+
+            ctx.drawImage(ghostImage, ghostObject.x, ghostObject.y, ghostObject.size, ghostObject.size);
+
+            // Check collision with ghost
+            if (
+                playerX + playerWidth > ghostObject.x &&
+                playerX < ghostObject.x + ghostObject.size &&
+                playerY + playerHeight > ghostObject.y &&
+                playerY < ghostObject.y + ghostObject.size
+            ) {
+                isGameOver = true;
+                ghostSound.play(); // Play ghost sound on collision
+            }
+        }
+
+        // Update score display
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Creepster';
+        ctx.textAlign = 'left';
+        ctx.fillText('Score: ' + score, 10, 30);
+        ctx.fillText('Souls: ' + souls, 10, 60);
+
+        // Schedule the next frame
+        requestAnimationFrame(gameLoop);
+
+        // Generate blocks
         if (timestamp - lastBlockGenerationTime > blockGenerationInterval) {
             generateBlock();
             lastBlockGenerationTime = timestamp;
         }
 
-        // Gradually increase music tempo over 10 minutes (600000 milliseconds)
+        // Adjust tempo of the music
         if (themeMusicStartTime) {
-            const elapsed = timestamp - themeMusicStartTime;
-            const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed / 600000) * tempoIncreaseFactor);
-            themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
-        }
-
-        // Draw the current souls count
-        ctx.fillStyle = 'red';
-        ctx.font = '20px Creepster';
-        ctx.textAlign = 'left';
-
-        // Apply green glow effect
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
-
-        ctx.fillText('Souls: ' + souls, 10, 30);
-
-        // Reset shadow for other drawings
-        ctx.shadowColor = 'transparent';
-
-        requestAnimationFrame(gameLoop);
-    }
-
-    function initializeStars() {
-        starData = [];
-        const numberOfStars = 7;
-        for (let i = 0; i < numberOfStars; i++) {
-            starData.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 2 + 1,
-                opacity: Math.random(),
-                fadeSpeed: Math.random() * 0.02 + 0.01
-            });
+            const elapsedTime = (performance.now() - themeMusicStartTime) / 60000; // Convert to minutes
+            const tempoFactor = 1 + Math.min(elapsedTime / 10, tempoIncreaseFactor);
+            themeMusic.playbackRate = baseTempo * tempoFactor;
         }
     }
 
-    function drawStars() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        starData.forEach(star => {
-            ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-            ctx.fillRect(star.x, star.y, star.size, star.size);
-
-            star.opacity += star.fadeSpeed;
-            if (star.opacity > 1 || star.opacity < 0) {
-                star.fadeSpeed *= -1;
-            }
-        });
-    }
-
-    function drawPlayer() {
-        ctx.drawImage(currentPlayerImage, playerX, playerY, playerWidth, playerHeight);
-    }
-
-    function drawBlocks() {
-        blocks.forEach(block => {
-            block.y += gameSpeed;
-
-            const boneWidth = blockWidth * 1.00;
-            const boneHeight = blockHeight * 2.40;
-
-            if (block.hit) {
-                ctx.drawImage(selectedBoneImage, block.x, block.y, boneWidth, boneHeight);
-            } else {
-                ctx.drawImage(boneImage, block.x, block.y, boneWidth, boneHeight);
-            }
-        });
-    }
-
-    function drawGhost() {
-        if (ghostObject) {
-            ctx.drawImage(ghostImage, ghostObject.x, ghostObject.y, ghostObject.size, ghostObject.size);
-            ghostObject.x += ghostObject.dx;
-            ghostObject.y += ghostObject.dy;
-
-            if (
-                ghostObject.x + ghostObject.size <= 0 ||
-                ghostObject.x >= canvas.width ||
-                ghostObject.y + ghostObject.size <= 0 ||
-                ghostObject.y >= canvas.height
-            ) {
-                souls++;
-                ghostSound.currentTime = 0; // Ensure the sound starts from the beginning
-                ghostSound.play(); // Play ghost sound
-                ghostObject = null;
-            }
-        }
-    }
-
-    restartButton.addEventListener('click', () => {
+    // Restart button event listener
+    restartButton.addEventListener('click', function() {
         resetGame();
-        startGame();
+        requestAnimationFrame(gameLoop);
     });
+
+    // Start with the intro music
+    introMusic.play();
 };
