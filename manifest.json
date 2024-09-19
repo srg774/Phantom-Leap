@@ -3,12 +3,12 @@
   "name": "Phantom Leap Game",
   "icons": [
     {
-      "src": "https://srg774.github.io/Phantom-Leap/assets/icon-192x192.png",
+      "src": "https://raw.githubusercontent.com/srg774/Phantom-Leap/25b32dc1069ef6c3ac50dfee36e97099ab185136/assets/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://srg774.github.io/Phantom-Leap/assets/icon-512x512.png",
+      "src": "https://raw.githubusercontent.com/srg774/Phantom-Leap/25b32dc1069ef6c3ac50dfee36e97099ab185136/assets/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
