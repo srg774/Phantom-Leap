@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Leap</title>
-    <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
-    <link rel="manifest" href="manifest.json"> <!-- Link to the web app manifest -->
+    <link rel="icon" href="assets/favicon.ico" type="image/x-icon"> <!-- Add this line for favicon -->
     <style>
         body {
             margin: 0;
@@ -46,12 +45,15 @@
             font-family: 'Creepster';
             src: url('assets/Creepster-Regular.ttf') format('truetype');
         }
+
+        /* Responsive design */
         @media (max-width: 768px) {
             #restartButton {
                 font-size: 18px;
                 padding: 12px 25px;
             }
         }
+
         @media (max-width: 480px) {
             #restartButton {
                 font-size: 16px;
@@ -63,20 +65,6 @@
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
-    <script>
-        // Register the service worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then((registration) => {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.log('Service Worker registration failed:', error);
-                    });
-            });
-        }
-    </script>
     <script src="game.js"></script>
 </body>
 </html>
