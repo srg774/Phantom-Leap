@@ -65,7 +65,8 @@ window.onload = function() {
     };
 
     const baseTempo = 1.0; // Base tempo for the music
-    const tempoIncreaseFactor = 0.1; // Rate at which tempo increases with game speed
+    const tempoIncreaseFactor = 1.0; // Maximum tempo increase factor over 10 minutes
+    let themeMusicStartTime = null;
 
     function startGame() {
         initializeStars();
@@ -111,6 +112,7 @@ window.onload = function() {
             introMusic.pause(); // Stop intro music
             introMusic.currentTime = 0; // Reset intro music position
             themeMusic.play(); // Start theme music
+            themeMusicStartTime = performance.now(); // Initialize theme music start time
             requestAnimationFrame(gameLoop);
         }, 1000);
 
@@ -267,11 +269,11 @@ window.onload = function() {
             // Determine the message based on the souls count
             let endMessage;
             if (souls < 100) {
-                endMessage = "Ooh, spooky!";
+                endMessage = "Ghosted!";
             } else if (souls < 300) {
-                endMessage = "Well done!";
+                endMessage = "Spooky Score!";
             } else {
-                endMessage = "You are a ghost master!";
+                endMessage = "Hauntingly Good!";
             }
 
             ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
@@ -342,8 +344,12 @@ window.onload = function() {
             lastBlockGenerationTime = timestamp;
         }
 
-        // Update the playback rate of the theme music
-        themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncreaseFactor;
+        // Gradually increase music tempo over 10 minutes (600000 milliseconds)
+        if (themeMusicStartTime) {
+            const elapsed = timestamp - themeMusicStartTime;
+            const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed / 600000) * tempoIncreaseFactor);
+            themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
+        }
 
         // Draw the current souls count
         ctx.fillStyle = 'red';
