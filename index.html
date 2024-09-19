@@ -66,60 +66,11 @@
                 padding: 10px 20px;
             }
         }
-
-        /* Install prompt styles */
-        #installButton {
-            display: none; /* Hidden by default */
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #000000;
-            color: #00FF00;
-            border: 3px solid #00FF00;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
-            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-        }
-        #installButton:hover {
-            background-color: #00FF00;
-            color: #000000;
-            transform: translateX(-50%) scale(1.05);
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
-        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
-    <button id="installButton">Install App</button> <!-- Hidden install button -->
     <script src="game.js"></script>
-    <script>
-        let deferredPrompt;
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault(); // Prevent the default mini-infobar
-            deferredPrompt = e; // Save the event for later use
-            const installButton = document.getElementById('installButton');
-            installButton.style.display = 'block'; // Show the install button
-        });
-
-        document.getElementById('installButton').addEventListener('click', () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the A2HS prompt');
-                    } else {
-                        console.log('User dismissed the A2HS prompt');
-                    }
-                    deferredPrompt = null; // Clear the saved prompt
-                });
-            }
-        });
-    </script>
 </body>
 </html>
