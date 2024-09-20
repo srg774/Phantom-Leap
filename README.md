@@ -2,26 +2,13 @@
 
 **https://srg774.github.io/Phantom-Leap/**
 
-Encouraged by the positive feedback from friends and family regarding the first iteration of the platform game I created, I decided to take it to the next level. Now, I’m approaching what may be the conclusion of my current game development project!
+Encouraged by the positive feedback from friends and family on the first iteration of my platform game, I decided to take the project to the next level. 
+Initially, I wanted the theme to be personal, perhaps related to the type of work I do. However, with Halloween approaching and so many great assets available for that theme, I decided to shift in that direction. 
+At first, I envisioned a pumpkin-head sprite jumping on bones (hence the name "SpriteBone"), but that didn’t quite look right. So, I switched to coffins instead. To add a bit of flair, I included a ghost or soul rising from the coffin as the sprite jumps up and down. I was mindful not to make it too similar to classic 8-bit games, and I think I managed to avoid that. 
+I envisioned a Halloween-themed game with enhanced art, animation, effects, and music. Since the core mechanics and game play were fairly developed, my main task was identifying which assets I needed and where to place them. Initially, I thought it would be a simple matter of overlaying assets, but it took more iterations and tweaks than I anticipated. However, I leveraged what I had learned to streamline the process.
+Most of the assets were sourced from opengameart.org, all under the CC0 license to avoid any attribution issues. I found the pumpkin sprite, music, sound effects, and ghost there. The coffin was generated using Craiyon ai, while I created the starry background, text, and restart button myself. I opted for a pixel art style, given its nostalgic feel and suitability for the game's aesthetic. Although I sought crisp-looking sprites, they were somewhat hard to find. I did, however, come across a large collection of 8-bit style music and art, which fit the theme well.
+I’ll provide a screenshot of the assets as a snapshot of this stage. It took a whole weekend of iterations and tweaks with ChatGPT to refine everything. This time, I developed the game offline on my Chromebook, using a text editor and testing it by running the index.html file locally before uploading to GitHub. This time, I achieved a single deployment that worked almost immediately. Only the music needed a few extra page refreshes to load properly.
+After finishing the game's design over the weekend, I spent two evenings packaging it as efficiently as I could. I explored Progressive Web Apps (PWA), a lightweight Google innovation that allows the game to work offline and function like a native app. While it’s been hit-or-miss on some devices, it works smoothly on my Android phone.
+I also tackled a steep learning curve with preview images, particularly for platforms like WhatsApp. I found that using images of a certain resolution or higher solved the issue. Now, I’m nearly ready for deployment.
 
-## Overview
-
-I envisioned a Halloween theme with improved art, animation, effects, and music. Since the game mechanics and gameplay were reasonably well-developed, the main task was to determine which assets I needed and where to place them. Initially, I thought I could simply overlay things, but it required more iterations and tweaks than anticipated. However, I utilized a lot of what I learned to streamline the process.
-
-## Asset Sourcing
-
-I sourced many assets from [opengameart.org](https://opengameart.org), all under the CC0 license, to avoid issues with attribution. There, I found:
-- The pumpkin sprite
-- Music
-- Sound effects
-- The ghost
-
-The coffin was generated using Crayon AI, while the star background, text, and restart button were drawn directly. I chose a pixel art style for its familiarity and game-friendly appearance. Although I looked for crisp-looking sprites, they are not widely available. Additionally, I found a vast library of 8-bit style music and art, which is also nostalgic for me.
-
-## Development Process
-
-This stage took another 7 hours of iterations and tweaks with ChatGPT. I developed everything offline this time on my Chromebook, using a text editor and running the `index.html` file to test the game before uploading it to GitHub directly. The process included a lot of page refreshes and, unlike my previous project which had 192 deplys and 7 hours of work, this time it was a single deployment that worked almost right away. The music needed a couple of page refreshes to load properly.
-
-## Sound and Music
-
-I mostly play games without sound, but as I was upgrading this time, I wanted to see what was possible. I hope you enjoy the game, and happy Halloween!
+Thank you, and I hope you enjoy the game!
