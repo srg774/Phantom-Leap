@@ -30,44 +30,43 @@
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #000000; /* Black background */
-            color: #FFFFFF; /* Set text color to white */
-            font-family: 'Creepster', sans-serif; /* Use a Halloween-style font */
-            text-align: center; /* Center align text and button */
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Creepster', sans-serif;
+            text-align: center;
         }
         #gameCanvas {
             display: block;
-            background-color: #000000; /* Canvas background black */
-            margin: 0 auto; /* Center the canvas horizontally */
+            background-color: #000000;
+            margin: 0 auto;
         }
         #restartButton {
             display: none;
-            position: fixed; /* Fixed position to stay in place when scrolling */
+            position: fixed;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
             padding: 15px 30px;
             font-size: 22px;
-            background-color: #000000; /* Button background black */
-            color: #00FF00; /* Neon green text color */
-            border: 3px solid #00FF00; /* Neon green border */
+            background-color: #000000;
+            color: #00FF00;
+            border: 3px solid #00FF00;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Black and green glowing effect */
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
             transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
         }
         #restartButton:hover {
-            background-color: #00FF00; /* Neon green background on hover */
-            color: #000000; /* Black text color on hover */
-            transform: translateX(-50%) scale(1.05); /* Slightly enlarge on hover */
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
+            background-color: #00FF00;
+            color: #000000;
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
         }
         @font-face {
             font-family: 'Creepster';
             src: url('assets/Creepster-Regular.ttf') format('truetype');
         }
 
-        /* Responsive design */
         @media (max-width: 768px) {
             #restartButton {
                 font-size: 18px;
@@ -86,6 +85,101 @@
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
-    <script src="game.js"></script>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const standImages = [
+            "assets/stand.png",
+            "assets/stand2.png",
+            "assets/stand3.png"
+        ];
+        const wagImages = [
+            "assets/wag1.png",
+            "assets/wag2.png",
+            "assets/wag3.png",
+            "assets/wag4.png",
+            "assets/wag5.png",
+            "assets/wag6.png"
+        ];
+        const wagtwistImages = [
+            "assets/wagtwist1.png",
+            "assets/wagtwist2.png",
+            "assets/wagtwist3.png"
+        ];
+
+        const images = {
+            stand: standImages.map(src => loadImage(src)),
+            wag: wagImages.map(src => loadImage(src)),
+            wagtwist: wagtwistImages.map(src => loadImage(src))
+        };
+
+        function loadImage(src) {
+            const img = new Image();
+            img.src = src;
+            return img;
+        }
+
+        let currentAnimation = "stand"; 
+        let currentFrame = 0;
+        const animationSpeed = 200;
+        let lastUpdateTime = 0;
+
+        function updateAnimation() {
+            const currentTime = Date.now();
+            if (currentTime - lastUpdateTime >= animationSpeed) {
+                currentFrame = (currentFrame + 1) % images[currentAnimation].length;
+                lastUpdateTime = currentTime;
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const img = images[currentAnimation][currentFrame];
+            ctx.drawImage(img, 50, 50, 200, 200);
+        }
+
+        function gameLoop() {
+            updateAnimation();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        Promise.all([
+            ...images.stand.map(img => new Promise(resolve => img.onload = resolve)),
+            ...images.wag.map(img => new Promise(resolve => img.onload = resolve)),
+            ...images.wagtwist.map(img => new Promise(resolve => img.onload = resolve))
+        ]).then(() => {
+            console.log('All images loaded');
+            gameLoop();
+            setTimeout(() => {
+                fadeOutAnimation();
+            }, animationSpeed * images[currentAnimation].length);
+        });
+
+        function fadeOutAnimation() {
+            let opacity = 1;
+            const fadeOutInterval = setInterval(() => {
+                opacity -= 0.05;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.globalAlpha = opacity;
+                draw();
+                if (opacity <= 0) {
+                    clearInterval(fadeOutInterval);
+                    startGame();
+                }
+            }, 20);
+        }
+
+        function startGame() {
+            console.log('Game is starting...');
+            document.getElementById('restartButton').style.display = 'block'; // Show the restart button
+            // Additional code for starting the main game can go here
+        }
+    </script>
 </body>
 </html>
