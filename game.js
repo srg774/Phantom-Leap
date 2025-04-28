@@ -39,10 +39,10 @@ window.onload = function() {
 
     const themeMusic = new Audio('assets/theme.mp3');
     themeMusic.loop = true;
-    themeMusic.volume = 0.2; // Start with a lower volume
+    themeMusic.volume = 0.2;
 
     const introMusic = new Audio('assets/intro.mp3');
-    introMusic.volume = 0.5; // Volume for the intro music
+    introMusic.volume = 0.5;
 
     const jumpSound = new Audio('assets/jump.ogg');
     const ghostSound = new Audio('assets/ghost.ogg');
@@ -50,6 +50,17 @@ window.onload = function() {
     const readySound = new Audio('assets/ready.ogg');
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
+
+    // Unlock audio on first user interaction
+    function unlockAudio() {
+        document.removeEventListener('click', unlockAudio);
+        document.removeEventListener('keydown', unlockAudio);
+
+        introMusic.play().catch(() => {});
+        themeMusic.play().catch(() => {});
+    }
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
 
     const blocks = [];
     const blockWidth = 50;
@@ -64,8 +75,8 @@ window.onload = function() {
         }
     };
 
-    const baseTempo = 1.0; // Base tempo for the music
-    const tempoIncreaseFactor = 1.0; // Maximum tempo increase factor over 10 minutes
+    const baseTempo = 1.0;
+    const tempoIncreaseFactor = 1.0;
     let themeMusicStartTime = null;
 
     function startGame() {
@@ -79,16 +90,14 @@ window.onload = function() {
         ctx.font = '40px Creepster';
         ctx.textAlign = 'center';
 
-        // Apply green glow effect
         ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         ctx.shadowBlur = 15;
 
         ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
 
-        // Reset shadow for other drawings
         ctx.shadowColor = 'transparent';
 
-        readySound.play(); // Play ready sound
+        readySound.play();
         setTimeout(() => {
             showGoScreen();
         }, 2000);
@@ -100,23 +109,21 @@ window.onload = function() {
         ctx.font = '40px Creepster';
         ctx.textAlign = 'center';
 
-        // Apply green glow effect
         ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         ctx.shadowBlur = 15;
 
         ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
 
-        goSound.play(); // Play go sound
+        goSound.play();
         setTimeout(() => {
             resetGame();
-            introMusic.pause(); // Stop intro music
-            introMusic.currentTime = 0; // Reset intro music position
-            themeMusic.play(); // Start theme music
-            themeMusicStartTime = performance.now(); // Initialize theme music start time
+            introMusic.pause();
+            introMusic.currentTime = 0;
+            themeMusic.play();
+            themeMusicStartTime = performance.now();
             requestAnimationFrame(gameLoop);
         }, 1000);
 
-        // Reset shadow for other drawings
         ctx.shadowColor = 'transparent';
     }
 
@@ -164,12 +171,12 @@ window.onload = function() {
         } else if (event.key === 'ArrowRight') {
             playerVelocityX = playerSpeed;
             currentPlayerImage = playerImageRight;
-        } else if (event.key === 'ArrowUp' || event.key === ' ') { 
+        } else if (event.key === 'ArrowUp' || event.key === ' ') {
             if (!jumpRequested) {
                 jump();
                 jumpRequested = true;
                 currentPlayerImage = playerImageJump;
-                jumpSound.play(); // Play jump sound on every jump
+                jumpSound.play();
             }
         }
     });
@@ -196,7 +203,7 @@ window.onload = function() {
             jump();
             jumpRequested = true;
             currentPlayerImage = playerImageJump;
-            jumpSound.play(); // Play jump sound on every jump
+            jumpSound.play();
         }
     });
 
@@ -209,7 +216,7 @@ window.onload = function() {
         playerVelocityY = -jumpStrength;
     }
 
-    let ghostObject = null; // Single ghost object
+    let ghostObject = null;
 
     function checkBlockCollision() {
         blocks.forEach(block => {
@@ -226,7 +233,6 @@ window.onload = function() {
 
                 if (gameSpeed < maxSpeed) {
                     gameSpeed += 0.01;
-                    // Increase theme music volume proportionally to game speed
                     themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3);
                 }
 
@@ -240,6 +246,8 @@ window.onload = function() {
                         dx: direction * 2,
                         dy: -2
                     };
+                    ghostSound.currentTime = 0;
+                    ghostSound.play(); // Now plays when ghost appears
                 }
             }
         });
@@ -249,7 +257,6 @@ window.onload = function() {
         if (playerY > canvas.height) {
             isGameOver = true;
         }
-
         blocks.forEach(block => {
             if (block.y > canvas.height && !block.hit) {
                 block.missed = true;
@@ -264,9 +271,8 @@ window.onload = function() {
     function gameLoop(timestamp) {
         if (isGameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            endMusic.play(); // Play end music
+            endMusic.play();
 
-            // Determine the message based on the souls count
             let endMessage;
             if (souls < 100) {
                 endMessage = "Ghosted!";
@@ -280,29 +286,19 @@ window.onload = function() {
             ctx.font = '50px Creepster';
             ctx.textAlign = 'center';
 
-            // Apply red glow effect
             ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
             ctx.shadowBlur = 15;
 
             ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 60);
-
-            // Display the end message based on the souls count
             ctx.font = '20px Creepster';
             ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2 - 20);
-
-            // Display the souls count
             ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
-
-            // Display the new text "By S.Gilchrist 2024 CC-BY-NC 4.0"
             ctx.font = '16px Creepster';
             ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 60);
 
             restartButton.style.display = 'block';
-
-            // Reset shadow for other drawings
             ctx.shadowColor = 'transparent';
 
-            // Stop the background music
             themeMusic.pause();
             themeMusic.currentTime = 0;
 
@@ -319,16 +315,6 @@ window.onload = function() {
         if (playerX + playerWidth > canvas.width) playerX = canvas.width - playerWidth;
         if (playerY < 0) playerY = 0;
 
-        if (playerVelocityY < 0) {
-            currentPlayerImage = playerImageJump;
-        } else if (playerVelocityX < 0) {
-            currentPlayerImage = playerImageLeft;
-        } else if (playerVelocityX > 0) {
-            currentPlayerImage = playerImageRight;
-        } else {
-            currentPlayerImage = playerImageRight;
-        }
-
         checkBlockCollision();
         checkGameOver();
 
@@ -344,29 +330,27 @@ window.onload = function() {
             lastBlockGenerationTime = timestamp;
         }
 
-        // Gradually increase music tempo over 10 minutes (600000 milliseconds)
         if (themeMusicStartTime) {
             const elapsed = timestamp - themeMusicStartTime;
             const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed / 600000) * tempoIncreaseFactor);
             themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
         }
 
-        // Draw the current souls count
         ctx.fillStyle = 'red';
         ctx.font = '20px Creepster';
         ctx.textAlign = 'left';
 
-        // Apply green glow effect
         ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         ctx.shadowBlur = 15;
 
         ctx.fillText('Souls: ' + souls, 10, 30);
 
-        // Reset shadow for other drawings
         ctx.shadowColor = 'transparent';
 
         requestAnimationFrame(gameLoop);
     }
+
+    let starData = [];
 
     function initializeStars() {
         starData = [];
@@ -383,8 +367,6 @@ window.onload = function() {
     }
 
     function drawStars() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         starData.forEach(star => {
             ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
             ctx.fillRect(star.x, star.y, star.size, star.size);
@@ -403,10 +385,8 @@ window.onload = function() {
     function drawBlocks() {
         blocks.forEach(block => {
             block.y += gameSpeed;
-
             const boneWidth = blockWidth * 1.00;
             const boneHeight = blockHeight * 2.40;
-
             if (block.hit) {
                 ctx.drawImage(selectedBoneImage, block.x, block.y, boneWidth, boneHeight);
             } else {
@@ -428,8 +408,6 @@ window.onload = function() {
                 ghostObject.y >= canvas.height
             ) {
                 souls++;
-                ghostSound.currentTime = 0; // Ensure the sound starts from the beginning
-                ghostSound.play(); // Play ghost sound
                 ghostObject = null;
             }
         }
