@@ -71,45 +71,19 @@ window.onload = function() {
     playerImageRight.onload = playerImageLeft.onload = playerImageJump.onload = boneImage.onload = selectedBoneImage.onload = ghostImage.onload = function() {
         imagesLoaded++;
         if (imagesLoaded === 6) {
-            startGame(); // Starts with intro animation
+            startGame();
         }
     };
 
-    // Modified startGame function to start with intro animation
+    const baseTempo = 1.0;
+    const tempoIncreaseFactor = 1.0;
+    let themeMusicStartTime = null;
+
     function startGame() {
-        introAnimation(); // Start animation before showing "Ready"
+        initializeStars();
+        showReadyScreen();
     }
 
-    // Intro animation function
-    function introAnimation() {
-        let animationFrame = 0;
-        let alpha = 0; // For fading effect
-
-        function animateIntro() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Example of a fade-in effect with the player moving
-            if (animationFrame < 100) {
-                alpha = Math.min(1, alpha + 0.01);  // Increase alpha for fade-in effect
-                playerX = (canvas.width / 2) + Math.sin(animationFrame / 10) * 50;
-                playerY = canvas.height / 2 + Math.cos(animationFrame / 20) * 20;
-
-                ctx.globalAlpha = alpha;  // Apply fade effect
-                ctx.drawImage(currentPlayerImage, playerX, playerY, playerWidth, playerHeight);
-                ctx.globalAlpha = 1; // Reset alpha to normal
-
-                animationFrame++;
-                requestAnimationFrame(animateIntro);
-            } else {
-                // Once animation completes, show the "Ready" screen
-                showReadyScreen();
-            }
-        }
-
-        animateIntro();  // Start the animation
-    }
-
-    // Show "Ready" screen
     function showReadyScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'red';
@@ -129,103 +103,318 @@ window.onload = function() {
         }, 2000);
     }
 
-    // Show "Go" screen
     function showGoScreen() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'green';
+        ctx.fillStyle = 'red';
         ctx.font = '40px Creepster';
         ctx.textAlign = 'center';
 
         ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         ctx.shadowBlur = 15;
 
-        ctx.fillText('Go!', canvas.width / 2, canvas.height / 2);
-
-        ctx.shadowColor = 'transparent';
+        ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
 
         goSound.play();
         setTimeout(() => {
-            startGameLoop();
+            resetGame();
+            introMusic.pause();
+            introMusic.currentTime = 0;
+            themeMusic.play();
+            themeMusicStartTime = performance.now();
+            requestAnimationFrame(gameLoop);
         }, 1000);
+
+        ctx.shadowColor = 'transparent';
     }
 
-    // Start the game loop
-    function startGameLoop() {
-        // Set initial player position and other game variables
-        playerX = canvas.width / 2;
-        playerY = canvas.height - playerHeight - 10;
-
-        requestAnimationFrame(gameLoop);
+    function resetGame() {
+        isGameOver = false;
+        gameSpeed = 0.5;
+        score = 0;
+        souls = 0;
+        playerX = canvas.width / 2 - playerWidth / 2;
+        playerY = canvas.height / 2 - playerHeight / 2;
+        playerVelocityY = 0;
+        playerVelocityX = 0;
+        blocks.length = 0;
+        ghostObject = null;
+        generateInitialBlocks();
+        restartButton.style.display = 'none';
     }
 
-    function gameLoop() {
-        if (isGameOver) return;
-
-        // Update player position, gravity, etc.
-        playerVelocityY += gravity;
-        playerY += playerVelocityY;
-
-        // Prevent player from falling off the canvas
-        if (playerY > canvas.height - playerHeight) {
-            playerY = canvas.height - playerHeight;
-            playerVelocityY = 0;
+    function generateInitialBlocks() {
+        for (let i = 0; i < 5; i++) {
+            generateBlock(canvas.height - i * blockSpacing);
         }
+    }
+
+    function generateBlock() {
+        if (blocks.length === 0 || blocks[blocks.length - 1].y > blockSpacing) {
+            const block = {
+                x: Math.random() * (canvas.width - blockWidth),
+                y: -blockHeight,
+                width: blockWidth,
+                height: blockHeight,
+                hit: false,
+                missed: false
+            };
+            blocks.push(block);
+        }
+    }
+
+    let jumpRequested = false;
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'ArrowLeft') {
+            playerVelocityX = -playerSpeed;
+            currentPlayerImage = playerImageLeft;
+        } else if (event.key === 'ArrowRight') {
+            playerVelocityX = playerSpeed;
+            currentPlayerImage = playerImageRight;
+        } else if (event.key === 'ArrowUp' || event.key === ' ') {
+            if (!jumpRequested) {
+                jump();
+                jumpRequested = true;
+                currentPlayerImage = playerImageJump;
+                jumpSound.play();
+            }
+        }
+    });
+
+    document.addEventListener('keyup', function(event) {
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            playerVelocityX = 0;
+        } else if (event.key === 'ArrowUp' || event.key === ' ') {
+            jumpRequested = false;
+        }
+    });
+
+    canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        if (touch.clientX < canvas.width / 2) {
+            playerVelocityX = -playerSpeed;
+            currentPlayerImage = playerImageLeft;
+        } else {
+            playerVelocityX = playerSpeed;
+            currentPlayerImage = playerImageRight;
+        }
+        if (!jumpRequested) {
+            jump();
+            jumpRequested = true;
+            currentPlayerImage = playerImageJump;
+            jumpSound.play();
+        }
+    });
+
+    canvas.addEventListener('touchend', function(e) {
+        playerVelocityX = 0;
+        jumpRequested = false;
+    });
+
+    function jump() {
+        playerVelocityY = -jumpStrength;
+    }
+
+    let ghostObject = null;
+
+    function checkBlockCollision() {
+        blocks.forEach(block => {
+            if (
+                playerX + playerWidth > block.x &&
+                playerX < block.x + blockWidth &&
+                playerY + playerHeight > block.y &&
+                playerY < block.y + blockHeight
+            ) {
+                playerVelocityY = -jumpStrength;
+                playerY = block.y - playerHeight;
+                block.hit = true;
+                score += 1;
+
+                if (gameSpeed < maxSpeed) {
+                    gameSpeed += 0.01;
+                    themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3);
+                }
+
+                if (!ghostObject) {
+                    const direction = Math.random() < 0.5 ? -1 : 1;
+                    ghostObject = {
+                        x: playerX + playerWidth / 2 - 15,
+                        y: playerY,
+                        size: 30,
+                        speed: 2,
+                        dx: direction * 2,
+                        dy: -2
+                    };
+                    ghostSound.currentTime = 0;
+                    ghostSound.play(); // Now plays when ghost appears
+                }
+            }
+        });
+    }
+
+    function checkGameOver() {
+        if (playerY > canvas.height) {
+            isGameOver = true;
+        }
+        blocks.forEach(block => {
+            if (block.y > canvas.height && !block.hit) {
+                block.missed = true;
+                isGameOver = true;
+            }
+        });
+    }
+
+    const blockGenerationInterval = 1000;
+    let lastBlockGenerationTime = 0;
+
+    function gameLoop(timestamp) {
+        if (isGameOver) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            endMusic.play();
+
+            let endMessage;
+            if (souls < 100) {
+                endMessage = "Ghosted!";
+            } else if (souls < 300) {
+                endMessage = "Spooky Score!";
+            } else {
+                endMessage = "Hauntingly Good!";
+            }
+
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            ctx.font = '50px Creepster';
+            ctx.textAlign = 'center';
+
+            ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+            ctx.shadowBlur = 15;
+
+            ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 60);
+            ctx.font = '20px Creepster';
+            ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2 - 20);
+            ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
+            ctx.font = '16px Creepster';
+            ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 60);
+
+            restartButton.style.display = 'block';
+            ctx.shadowColor = 'transparent';
+
+            themeMusic.pause();
+            themeMusic.currentTime = 0;
+
+            return;
+        }
+
+        playerVelocityY += gravity;
+        if (playerVelocityY > maxSpeed) playerVelocityY = maxSpeed;
+
+        playerY += playerVelocityY;
+        playerX += playerVelocityX;
+
+        if (playerX < 0) playerX = 0;
+        if (playerX + playerWidth > canvas.width) playerX = canvas.width - playerWidth;
+        if (playerY < 0) playerY = 0;
+
+        checkBlockCollision();
+        checkGameOver();
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw player character
-        ctx.drawImage(currentPlayerImage, playerX, playerY, playerWidth, playerHeight);
+        drawStars();
+        drawPlayer();
+        drawBlocks();
+        drawGhost();
 
-        // Other game rendering logic like blocks, score, etc.
-        // ...
+        if (timestamp - lastBlockGenerationTime > blockGenerationInterval) {
+            generateBlock();
+            lastBlockGenerationTime = timestamp;
+        }
+
+        if (themeMusicStartTime) {
+            const elapsed = timestamp - themeMusicStartTime;
+            const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed / 600000) * tempoIncreaseFactor);
+            themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
+        }
+
+        ctx.fillStyle = 'red';
+        ctx.font = '20px Creepster';
+        ctx.textAlign = 'left';
+
+        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+        ctx.shadowBlur = 15;
+
+        ctx.fillText('Souls: ' + souls, 10, 30);
+
+        ctx.shadowColor = 'transparent';
 
         requestAnimationFrame(gameLoop);
     }
 
-    // Handle player jump
-    function jump() {
-        if (playerY === canvas.height - playerHeight) {
-            playerVelocityY = -jumpStrength;
-            jumpSound.play();
+    let starData = [];
+
+    function initializeStars() {
+        starData = [];
+        const numberOfStars = 7;
+        for (let i = 0; i < numberOfStars; i++) {
+            starData.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 1,
+                opacity: Math.random(),
+                fadeSpeed: Math.random() * 0.02 + 0.01
+            });
         }
     }
 
-    // Handle player movement (left/right)
-    function movePlayer(direction) {
-        if (direction === 'left' && playerX > 0) {
-            playerX -= playerSpeed;
-            currentPlayerImage = playerImageLeft;
-        } else if (direction === 'right' && playerX < canvas.width - playerWidth) {
-            playerX += playerSpeed;
-            currentPlayerImage = playerImageRight;
+    function drawStars() {
+        starData.forEach(star => {
+            ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+
+            star.opacity += star.fadeSpeed;
+            if (star.opacity > 1 || star.opacity < 0) {
+                star.fadeSpeed *= -1;
+            }
+        });
+    }
+
+    function drawPlayer() {
+        ctx.drawImage(currentPlayerImage, playerX, playerY, playerWidth, playerHeight);
+    }
+
+    function drawBlocks() {
+        blocks.forEach(block => {
+            block.y += gameSpeed;
+            const boneWidth = blockWidth * 1.00;
+            const boneHeight = blockHeight * 2.40;
+            if (block.hit) {
+                ctx.drawImage(selectedBoneImage, block.x, block.y, boneWidth, boneHeight);
+            } else {
+                ctx.drawImage(boneImage, block.x, block.y, boneWidth, boneHeight);
+            }
+        });
+    }
+
+    function drawGhost() {
+        if (ghostObject) {
+            ctx.drawImage(ghostImage, ghostObject.x, ghostObject.y, ghostObject.size, ghostObject.size);
+            ghostObject.x += ghostObject.dx;
+            ghostObject.y += ghostObject.dy;
+
+            if (
+                ghostObject.x + ghostObject.size <= 0 ||
+                ghostObject.x >= canvas.width ||
+                ghostObject.y + ghostObject.size <= 0 ||
+                ghostObject.y >= canvas.height
+            ) {
+                souls++;
+                ghostObject = null;
+            }
         }
     }
 
-    // Event listeners for controls (keyboard or buttons)
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'ArrowLeft') {
-            movePlayer('left');
-        } else if (e.key === 'ArrowRight') {
-            movePlayer('right');
-        } else if (e.key === ' ') {
-            jump();
-        }
+    restartButton.addEventListener('click', () => {
+        resetGame();
+        startGame();
     });
-
-    // Restart game button
-    restartButton.addEventListener('click', function() {
-        restartGame();
-    });
-
-    // Restart the game
-    function restartGame() {
-        score = 0;
-        souls = 0;
-        isGameOver = false;
-        gameSpeed = 0.5;
-        playerY = canvas.height - playerHeight - 10;
-        playerVelocityY = 0;
-
-        startGame();  // Restart with intro animation
-    }
 };
