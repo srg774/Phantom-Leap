@@ -8,7 +8,7 @@ window.onload = function() {
     gameCanvas.width = 400;
     gameCanvas.height = 600;
     titleCanvas.width = 400;
-    titleCanvas.height = 400; // Match the animation canvas dimensions
+    titleCanvas.height = 400;
 
     let isGameOver = false;
     let gameSpeed = 0.5;
@@ -55,11 +55,9 @@ window.onload = function() {
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
 
-    // Unlock audio on first user interaction
     function unlockAudio() {
         document.removeEventListener('click', unlockAudio);
         document.removeEventListener('keydown', unlockAudio);
-
         introMusic.play().catch(() => {});
         themeMusic.play().catch(() => {});
     }
@@ -72,14 +70,17 @@ window.onload = function() {
     const blockSpacing = 200;
 
     let gameImagesLoaded = 0;
+    let allGameImagesLoaded = false;
     playerImageRight.onload = playerImageLeft.onload = playerImageJump.onload = boneImage.onload = selectedBoneImage.onload = ghostImage.onload = function() {
         gameImagesLoaded++;
-        if (gameImagesLoaded === 6 && titleAnimationLoaded) {
-            playTitleAnimationSequence();
+        if (gameImagesLoaded === 6) {
+            allGameImagesLoaded = true;
+            if (titleAnimationLoaded) {
+                playTitleAnimationSequence();
+            }
         }
     };
 
-    // Title animation variables and loading
     const standImageSrcs = [
         "assets/stand.png",
         "assets/stand2.png",
@@ -104,7 +105,7 @@ window.onload = function() {
         wag: [],
         wagtwist: []
     };
-    const titleAnimationSpeed = 200; // Time in milliseconds per frame
+    const titleAnimationSpeed = 200;
     let titleAnimationLoaded = false;
     let currentAnimationSequence = [];
     let currentSequenceIndex = 0;
@@ -123,7 +124,7 @@ window.onload = function() {
                 loadedCount++;
                 if (loadedCount === totalImages) {
                     titleAnimationLoaded = true;
-                    if (gameImagesLoaded === 6) {
+                    if (allGameImagesLoaded) {
                         playTitleAnimationSequence();
                     }
                 }
@@ -193,13 +194,9 @@ window.onload = function() {
         titleCtx.fillStyle = "#000";
         titleCtx.fillRect(0, 0, titleCanvas.width, titleCanvas.height);
         if (img) {
-            titleCtx.drawImage(img, titleCanvas.width / 2 - 100, titleCanvas.height / 2 - 100, 200, 200); // Adjust position and size as needed
+            titleCtx.drawImage(img, titleCanvas.width / 2 - 100, titleCanvas.height / 2 - 100, 200, 200);
         }
     }
-
-    const baseTempo = 1.0;
-    const tempoIncreaseFactor = 1.0;
-    let themeMusicStartTime = null;
 
     function startGame() {
         initializeStars();
@@ -211,14 +208,10 @@ window.onload = function() {
         gameCtx.fillStyle = 'red';
         gameCtx.font = '40px Creepster';
         gameCtx.textAlign = 'center';
-
         gameCtx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         gameCtx.shadowBlur = 15;
-
         gameCtx.fillText('Ready', gameCanvas.width / 2, gameCanvas.height / 2);
-
         gameCtx.shadowColor = 'transparent';
-
         readySound.play();
         setTimeout(() => {
             showGoScreen();
@@ -230,12 +223,9 @@ window.onload = function() {
         gameCtx.fillStyle = 'red';
         gameCtx.font = '40px Creepster';
         gameCtx.textAlign = 'center';
-
         gameCtx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         gameCtx.shadowBlur = 15;
-
         gameCtx.fillText('Go', gameCanvas.width / 2, gameCanvas.height / 2);
-
         goSound.play();
         setTimeout(() => {
             resetGame();
@@ -245,7 +235,6 @@ window.onload = function() {
             themeMusicStartTime = performance.now();
             requestAnimationFrame(gameLoop);
         }, 1000);
-
         gameCtx.shadowColor = 'transparent';
     }
 
@@ -285,7 +274,6 @@ window.onload = function() {
     }
 
     let jumpRequested = false;
-
     document.addEventListener('keydown', function(event) {
         if (event.key === 'ArrowLeft') {
             playerVelocityX = -playerSpeed;
@@ -352,12 +340,10 @@ window.onload = function() {
                 playerY = block.y - playerHeight;
                 block.hit = true;
                 score += 1;
-
                 if (gameSpeed < maxSpeed) {
                     gameSpeed += 0.01;
                     themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3);
                 }
-
                 if (!ghostObject) {
                     const direction = Math.random() < 0.5 ? -1 : 1;
                     ghostObject = {
@@ -369,7 +355,7 @@ window.onload = function() {
                         dy: -2
                     };
                     ghostSound.currentTime = 0;
-                    ghostSound.play(); // Now plays when ghost appears
+                    ghostSound.play();
                 }
             }
         });
@@ -394,7 +380,6 @@ window.onload = function() {
         if (isGameOver) {
             gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
             endMusic.play();
-
             let endMessage;
             if (souls < 100) {
                 endMessage = "Ghosted!";
@@ -403,55 +388,22 @@ window.onload = function() {
             } else {
                 endMessage = "Hauntingly Good!";
             }
-
             gameCtx.fillStyle = 'rgba(255, 0, 0, 0.8)';
             gameCtx.font = '50px Creepster';
             gameCtx.textAlign = 'center';
-
             gameCtx.shadowColor = 'rgba(255, 0, 0, 0.8)';
             gameCtx.shadowBlur = 15;
-
             gameCtx.fillText('Game Over', gameCanvas.width / 2, gameCanvas.height / 2 - 60);
             gameCtx.font = '20px Creepster';
             gameCtx.fillText(endMessage, gameCanvas.width / 2, gameCanvas.height / 2 - 20);
             gameCtx.fillText('Souls: ' + souls, gameCanvas.width / 2, gameCanvas.height / 2 + 20);
             gameCtx.font = '16px Creepster';
             gameCtx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', gameCanvas.width / 2, gameCanvas.height / 2 + 60);
-
             restartButton.style.display = 'block';
             gameCtx.shadowColor = 'transparent';
-
             themeMusic.pause();
             themeMusic.currentTime = 0;
-
             return;
         }
-
         playerVelocityY += gravity;
-        if (playerVelocityY > maxSpeed) playerVelocityY = maxSpeed;
-
-        playerY += playerVelocityY;
-        playerX += playerVelocityX;
-
-        if (playerX < 0) playerX = 0;
-        if (playerX + playerWidth > gameCanvas.width) playerX = gameCanvas.width - playerWidth;
-        if (playerY < 0) playerY = 0;
-
-        checkBlockCollision();
-        checkGameOver();
-
-        gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
-
-        drawStars();
-        drawPlayer();
-        drawBlocks();
-        drawGhost();
-
-        if (timestamp - lastBlockGenerationTime > blockGenerationInterval) {
-            generateBlock();
-            lastBlockGenerationTime = timestamp;
-        }
-
-        if (themeMusicStartTime) {
-            const elapsed = timestamp - themeMusicStartTime;
-            const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed /
+        if (playerVelocityY > maxSpeed) playerVelocity
