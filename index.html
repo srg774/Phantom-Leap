@@ -24,7 +24,7 @@
     <meta name="twitter:title" content="Phantom Leap Game">
     <meta name="twitter:description" content="Take a leap of faith">
     <meta name="twitter:image" content="https://raw.githubusercontent.com/srg774/Phantom-Leap/7add468e4f8c082e4dcb0433ad2fa9c5c50cf9e7/assets/media.png">
-    <meta name="twitter:site" content="@YourTwitterHandle"> <!-- Replace with your Twitter handle if desired -->
+    <meta name="twitter:site" content="@YourTwitterHandle">
 
     <style>
         body {
@@ -67,6 +67,7 @@
             src: url('assets/Creepster-Regular.ttf') format('truetype');
         }
 
+        /* Responsive design */
         @media (max-width: 768px) {
             #restartButton {
                 font-size: 18px;
@@ -121,7 +122,7 @@
             return img;
         }
 
-        let currentAnimation = "stand"; 
+        let currentAnimation = "wag"; // Start with wag animation
         let currentFrame = 0;
         const animationSpeed = 200;
         let lastUpdateTime = 0;
@@ -139,8 +140,11 @@
             ctx.fillStyle = "#000";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            // Center the animation
             const img = images[currentAnimation][currentFrame];
-            ctx.drawImage(img, 50, 50, 200, 200);
+            const x = (canvas.width - img.width) / 2; // Center horizontally
+            const y = (canvas.height - img.height) / 2; // Center vertically
+            ctx.drawImage(img, x, y);
         }
 
         function gameLoop() {
@@ -157,29 +161,21 @@
             console.log('All images loaded');
             gameLoop();
             setTimeout(() => {
-                fadeOutAnimation();
+                startReadyGo(); // Transition to Ready/Go
             }, animationSpeed * images[currentAnimation].length);
         });
 
-        function fadeOutAnimation() {
-            let opacity = 1;
-            const fadeOutInterval = setInterval(() => {
-                opacity -= 0.05;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.globalAlpha = opacity;
-                draw();
-                if (opacity <= 0) {
-                    clearInterval(fadeOutInterval);
-                    startGame();
-                }
-            }, 20);
+        function startReadyGo() {
+            // Show the Ready/Go transition
+            alert("Ready... Go!");
+            // Start the main game (could also hide the canvas and show the game UI)
+            document.getElementById('restartButton').style.display = 'block'; // Show the restart button
         }
 
-        function startGame() {
-            console.log('Game is starting...');
-            document.getElementById('restartButton').style.display = 'block'; // Show the restart button
-            // Additional code for starting the main game can go here
-        }
+        // This function can be customized for game restart
+        document.getElementById("restartButton").addEventListener("click", function() {
+            window.location.reload(); // Reload to restart the game
+        });
     </script>
 </body>
 </html>
