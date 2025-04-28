@@ -35,46 +35,47 @@
             font-family: 'Creepster', sans-serif; /* Use a Halloween-style font */
             text-align: center; /* Center align text and button */
         }
-        #gameCanvas {
+        canvas {
             display: block;
-            background-color: #000000; /* Canvas background black */
-            margin: 0 auto; /* Center the canvas horizontally */
+            background-color: #000000;
+            margin: 0 auto;
+        }
+        #gameCanvas {
+            display: none; /* hidden until animation finishes */
         }
         #restartButton {
             display: none;
-            position: fixed; /* Fixed position to stay in place when scrolling */
+            position: fixed;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
             padding: 15px 30px;
             font-size: 22px;
-            background-color: #000000; /* Button background black */
-            color: #00FF00; /* Neon green text color */
-            border: 3px solid #00FF00; /* Neon green border */
+            background-color: #000000;
+            color: #00FF00;
+            border: 3px solid #00FF00;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Black and green glowing effect */
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
             transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
         }
         #restartButton:hover {
-            background-color: #00FF00; /* Neon green background on hover */
-            color: #000000; /* Black text color on hover */
-            transform: translateX(-50%) scale(1.05); /* Slightly enlarge on hover */
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
+            background-color: #00FF00;
+            color: #000000;
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
         }
         @font-face {
             font-family: 'Creepster';
             src: url('assets/Creepster-Regular.ttf') format('truetype');
         }
-
-        /* Responsive design */
+        /* Responsive */
         @media (max-width: 768px) {
             #restartButton {
                 font-size: 18px;
                 padding: 12px 25px;
             }
         }
-
         @media (max-width: 480px) {
             #restartButton {
                 font-size: 16px;
@@ -84,8 +85,12 @@
     </style>
 </head>
 <body>
+
+    <canvas id="animationCanvas" width="800" height="600"></canvas>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
+
+    <script src="pumpkinAnimation.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
