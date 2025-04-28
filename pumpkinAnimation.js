@@ -1,4 +1,3 @@
-// pumpkinAnimation.js
 const canvas = document.getElementById("animationCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -35,14 +34,31 @@ function loadImage(src) {
 
 let currentAnimation = "stand"; 
 let currentFrame = 0;
-const animationSpeed = 200;
+const animationSpeed = 200; // time per frame in ms
 let lastUpdateTime = 0;
+let animationPhase = 0; // 0 = stand, 1 = wag, 2 = wagtwist, 3 = done
 
 function updateAnimation() {
     const currentTime = Date.now();
     if (currentTime - lastUpdateTime >= animationSpeed) {
-        currentFrame = (currentFrame + 1) % images[currentAnimation].length;
+        currentFrame++;
         lastUpdateTime = currentTime;
+
+        if (currentFrame >= images[currentAnimation].length) {
+            currentFrame = 0;
+            animationPhase++;
+            switch (animationPhase) {
+                case 1:
+                    currentAnimation = "wag";
+                    break;
+                case 2:
+                    currentAnimation = "wagtwist";
+                    break;
+                case 3:
+                    fadeOutAnimation();
+                    break;
+            }
+        }
     }
 }
 
@@ -52,7 +68,7 @@ function draw() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     const img = images[currentAnimation][currentFrame];
-    ctx.drawImage(img, 50, 50, 200, 200);
+    ctx.drawImage(img, (canvas.width - 200) / 2, (canvas.height - 200) / 2, 200, 200);
 }
 
 function gameLoop() {
@@ -68,29 +84,29 @@ Promise.all([
 ]).then(() => {
     console.log('All images loaded');
     gameLoop();
-    // Animation finished, trigger fade out and start game
-    setTimeout(() => {
-        fadeOutAnimation();
-    }, animationSpeed * images[currentAnimation].length);
 });
 
 function fadeOutAnimation() {
     let opacity = 1;
-    const fadeOutInterval = setInterval(() => {
-        opacity -= 0.05;
+    function fade() {
+        opacity -= 0.02;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = opacity;
         draw();
-        if (opacity <= 0) {
-            clearInterval(fadeOutInterval);
+        ctx.globalAlpha = 1; // Reset after draw
+
+        if (opacity > 0) {
+            requestAnimationFrame(fade);
+        } else {
+            canvas.style.display = "none";
+            document.getElementById("gameCanvas").style.display = "block";
             startGame();
         }
-    }, 20);
+    }
+    fade();
 }
 
 function startGame() {
-    // After the animation fades out, trigger the game start logic
-    // For example, show "Ready" screen and then "Go"
-    console.log('Game is starting...');
-    // Your code to transition to the main game goes here
+    console.log('Starting game...');
+    window.onload(); // Triggers your game.js start logic
 }
