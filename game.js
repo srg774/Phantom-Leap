@@ -1,10 +1,14 @@
 window.onload = function() {
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gameCtx = gameCanvas.getContext('2d');
+    const titleCanvas = document.getElementById('titleCanvas');
+    const titleCtx = titleCanvas.getContext('2d');
     const restartButton = document.getElementById('restartButton');
 
-    canvas.width = 400;
-    canvas.height = 600;
+    gameCanvas.width = 400;
+    gameCanvas.height = 600;
+    titleCanvas.width = 400;
+    titleCanvas.height = 400; // Match the animation canvas dimensions
 
     let isGameOver = false;
     let gameSpeed = 0.5;
@@ -67,13 +71,131 @@ window.onload = function() {
     const blockHeight = 15;
     const blockSpacing = 200;
 
-    let imagesLoaded = 0;
+    let gameImagesLoaded = 0;
     playerImageRight.onload = playerImageLeft.onload = playerImageJump.onload = boneImage.onload = selectedBoneImage.onload = ghostImage.onload = function() {
-        imagesLoaded++;
-        if (imagesLoaded === 6) {
-            startGame();
+        gameImagesLoaded++;
+        if (gameImagesLoaded === 6 && titleAnimationLoaded) {
+            playTitleAnimationSequence();
         }
     };
+
+    // Title animation variables and loading
+    const standImageSrcs = [
+        "assets/stand.png",
+        "assets/stand2.png",
+        "assets/stand3.png"
+    ];
+    const wagImageSrcs = [
+        "assets/wag1.png",
+        "assets/wag2.png",
+        "assets/wag3.png",
+        "assets/wag4.png",
+        "assets/wag5.png",
+        "assets/wag6.png"
+    ];
+    const wagtwistImageSrcs = [
+        "assets/wagtwist1.png",
+        "assets/wagtwist2.png",
+        "assets/wagtwist3.png"
+    ];
+
+    let titleAnimationImages = {
+        stand: [],
+        wag: [],
+        wagtwist: []
+    };
+    const titleAnimationSpeed = 200; // Time in milliseconds per frame
+    let titleAnimationLoaded = false;
+    let currentAnimationSequence = [];
+    let currentSequenceIndex = 0;
+    let currentFrameIndex = 0;
+    let lastFrameTime = 0;
+
+    function loadTitleAnimationImages() {
+        let loadedCount = 0;
+        const totalImages = standImageSrcs.length + wagImageSrcs.length + wagtwistImageSrcs.length;
+
+        const loadImage = (src, category, array) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                array.push(img);
+                loadedCount++;
+                if (loadedCount === totalImages) {
+                    titleAnimationLoaded = true;
+                    if (gameImagesLoaded === 6) {
+                        playTitleAnimationSequence();
+                    }
+                }
+            };
+            img.onerror = () => console.error(`Error loading ${src}`);
+        };
+
+        standImageSrcs.forEach(src => loadImage(src, 'stand', titleAnimationImages.stand));
+        wagImageSrcs.forEach(src => loadImage(src, 'wag', titleAnimationImages.wag));
+        wagtwistImageSrcs.forEach(src => loadImage(src, 'wagtwist', titleAnimationImages.wagtwist));
+    }
+
+    function playTitleAnimationSequence() {
+        currentAnimationSequence = ['stand', 'wag', 'wagtwist'];
+        currentSequenceIndex = 0;
+        currentFrameIndex = 0;
+        lastFrameTime = 0;
+        titleCanvas.style.display = 'flex';
+        gameCanvas.style.display = 'none';
+        requestAnimationFrame(updateTitleAnimation);
+    }
+
+    function updateTitleAnimation(timestamp) {
+        if (!currentAnimationSequence.length) {
+            titleCanvas.style.display = 'none';
+            gameCanvas.style.display = 'block';
+            startGame();
+            return;
+        }
+
+        const currentAnimationName = currentAnimationSequence[currentSequenceIndex];
+        const frames = titleAnimationImages[currentAnimationName];
+
+        if (!frames || frames.length === 0) {
+            currentSequenceIndex++;
+            if (currentSequenceIndex >= currentAnimationSequence.length) {
+                titleCanvas.style.display = 'none';
+                gameCanvas.style.display = 'block';
+                startGame();
+                return;
+            }
+            requestAnimationFrame(updateTitleAnimation);
+            return;
+        }
+
+        if (timestamp - lastFrameTime >= titleAnimationSpeed) {
+            drawTitleFrame(frames[currentFrameIndex]);
+            currentFrameIndex++;
+            lastFrameTime = timestamp;
+
+            if (currentFrameIndex >= frames.length) {
+                currentFrameIndex = 0;
+                currentSequenceIndex++;
+                if (currentSequenceIndex >= currentAnimationSequence.length) {
+                    titleCanvas.style.display = 'none';
+                    gameCanvas.style.display = 'block';
+                    startGame();
+                    return;
+                }
+            }
+        }
+        requestAnimationFrame(updateTitleAnimation);
+    }
+
+    function drawTitleFrame(img) {
+        titleCtx.clearRect(0, 0, titleCanvas.width, titleCanvas.height);
+        titleCtx.fillStyle = "#000";
+        titleCtx.fillRect(0, 0, titleCanvas.width, titleCanvas.height);
+        if (img) {
+            titleCtx.drawImage(img, titleCanvas.width / 2 - 100, titleCanvas.height / 2 - 100, 200, 200); // Adjust position and size as needed
+        }
+    }
 
     const baseTempo = 1.0;
     const tempoIncreaseFactor = 1.0;
@@ -85,17 +207,17 @@ window.onload = function() {
     }
 
     function showReadyScreen() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
+        gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+        gameCtx.fillStyle = 'red';
+        gameCtx.font = '40px Creepster';
+        gameCtx.textAlign = 'center';
 
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
+        gameCtx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+        gameCtx.shadowBlur = 15;
 
-        ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
+        gameCtx.fillText('Ready', gameCanvas.width / 2, gameCanvas.height / 2);
 
-        ctx.shadowColor = 'transparent';
+        gameCtx.shadowColor = 'transparent';
 
         readySound.play();
         setTimeout(() => {
@@ -104,15 +226,15 @@ window.onload = function() {
     }
 
     function showGoScreen() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
+        gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+        gameCtx.fillStyle = 'red';
+        gameCtx.font = '40px Creepster';
+        gameCtx.textAlign = 'center';
 
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
+        gameCtx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+        gameCtx.shadowBlur = 15;
 
-        ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
+        gameCtx.fillText('Go', gameCanvas.width / 2, gameCanvas.height / 2);
 
         goSound.play();
         setTimeout(() => {
@@ -124,7 +246,7 @@ window.onload = function() {
             requestAnimationFrame(gameLoop);
         }, 1000);
 
-        ctx.shadowColor = 'transparent';
+        gameCtx.shadowColor = 'transparent';
     }
 
     function resetGame() {
@@ -132,8 +254,8 @@ window.onload = function() {
         gameSpeed = 0.5;
         score = 0;
         souls = 0;
-        playerX = canvas.width / 2 - playerWidth / 2;
-        playerY = canvas.height / 2 - playerHeight / 2;
+        playerX = gameCanvas.width / 2 - playerWidth / 2;
+        playerY = gameCanvas.height / 2 - playerHeight / 2;
         playerVelocityY = 0;
         playerVelocityX = 0;
         blocks.length = 0;
@@ -144,14 +266,14 @@ window.onload = function() {
 
     function generateInitialBlocks() {
         for (let i = 0; i < 5; i++) {
-            generateBlock(canvas.height - i * blockSpacing);
+            generateBlock(gameCanvas.height - i * blockSpacing);
         }
     }
 
     function generateBlock() {
         if (blocks.length === 0 || blocks[blocks.length - 1].y > blockSpacing) {
             const block = {
-                x: Math.random() * (canvas.width - blockWidth),
+                x: Math.random() * (gameCanvas.width - blockWidth),
                 y: -blockHeight,
                 width: blockWidth,
                 height: blockHeight,
@@ -189,10 +311,10 @@ window.onload = function() {
         }
     });
 
-    canvas.addEventListener('touchstart', function(e) {
+    gameCanvas.addEventListener('touchstart', function(e) {
         e.preventDefault();
         const touch = e.touches[0];
-        if (touch.clientX < canvas.width / 2) {
+        if (touch.clientX < gameCanvas.width / 2) {
             playerVelocityX = -playerSpeed;
             currentPlayerImage = playerImageLeft;
         } else {
@@ -207,7 +329,7 @@ window.onload = function() {
         }
     });
 
-    canvas.addEventListener('touchend', function(e) {
+    gameCanvas.addEventListener('touchend', function(e) {
         playerVelocityX = 0;
         jumpRequested = false;
     });
@@ -254,11 +376,11 @@ window.onload = function() {
     }
 
     function checkGameOver() {
-        if (playerY > canvas.height) {
+        if (playerY > gameCanvas.height) {
             isGameOver = true;
         }
         blocks.forEach(block => {
-            if (block.y > canvas.height && !block.hit) {
+            if (block.y > gameCanvas.height && !block.hit) {
                 block.missed = true;
                 isGameOver = true;
             }
@@ -270,7 +392,7 @@ window.onload = function() {
 
     function gameLoop(timestamp) {
         if (isGameOver) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
             endMusic.play();
 
             let endMessage;
@@ -282,22 +404,22 @@ window.onload = function() {
                 endMessage = "Hauntingly Good!";
             }
 
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
-            ctx.font = '50px Creepster';
-            ctx.textAlign = 'center';
+            gameCtx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            gameCtx.font = '50px Creepster';
+            gameCtx.textAlign = 'center';
 
-            ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
-            ctx.shadowBlur = 15;
+            gameCtx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+            gameCtx.shadowBlur = 15;
 
-            ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 60);
-            ctx.font = '20px Creepster';
-            ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2 - 20);
-            ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
-            ctx.font = '16px Creepster';
-            ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 60);
+            gameCtx.fillText('Game Over', gameCanvas.width / 2, gameCanvas.height / 2 - 60);
+            gameCtx.font = '20px Creepster';
+            gameCtx.fillText(endMessage, gameCanvas.width / 2, gameCanvas.height / 2 - 20);
+            gameCtx.fillText('Souls: ' + souls, gameCanvas.width / 2, gameCanvas.height / 2 + 20);
+            gameCtx.font = '16px Creepster';
+            gameCtx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', gameCanvas.width / 2, gameCanvas.height / 2 + 60);
 
             restartButton.style.display = 'block';
-            ctx.shadowColor = 'transparent';
+            gameCtx.shadowColor = 'transparent';
 
             themeMusic.pause();
             themeMusic.currentTime = 0;
@@ -312,13 +434,13 @@ window.onload = function() {
         playerX += playerVelocityX;
 
         if (playerX < 0) playerX = 0;
-        if (playerX + playerWidth > canvas.width) playerX = canvas.width - playerWidth;
+        if (playerX + playerWidth > gameCanvas.width) playerX = gameCanvas.width - playerWidth;
         if (playerY < 0) playerY = 0;
 
         checkBlockCollision();
         checkGameOver();
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
         drawStars();
         drawPlayer();
@@ -332,89 +454,4 @@ window.onload = function() {
 
         if (themeMusicStartTime) {
             const elapsed = timestamp - themeMusicStartTime;
-            const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed / 600000) * tempoIncreaseFactor);
-            themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
-        }
-
-        ctx.fillStyle = 'red';
-        ctx.font = '20px Creepster';
-        ctx.textAlign = 'left';
-
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
-
-        ctx.fillText('Souls: ' + souls, 10, 30);
-
-        ctx.shadowColor = 'transparent';
-
-        requestAnimationFrame(gameLoop);
-    }
-
-    let starData = [];
-
-    function initializeStars() {
-        starData = [];
-        const numberOfStars = 7;
-        for (let i = 0; i < numberOfStars; i++) {
-            starData.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: Math.random() * 2 + 1,
-                opacity: Math.random(),
-                fadeSpeed: Math.random() * 0.02 + 0.01
-            });
-        }
-    }
-
-    function drawStars() {
-        starData.forEach(star => {
-            ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`;
-            ctx.fillRect(star.x, star.y, star.size, star.size);
-
-            star.opacity += star.fadeSpeed;
-            if (star.opacity > 1 || star.opacity < 0) {
-                star.fadeSpeed *= -1;
-            }
-        });
-    }
-
-    function drawPlayer() {
-        ctx.drawImage(currentPlayerImage, playerX, playerY, playerWidth, playerHeight);
-    }
-
-    function drawBlocks() {
-        blocks.forEach(block => {
-            block.y += gameSpeed;
-            const boneWidth = blockWidth * 1.00;
-            const boneHeight = blockHeight * 2.40;
-            if (block.hit) {
-                ctx.drawImage(selectedBoneImage, block.x, block.y, boneWidth, boneHeight);
-            } else {
-                ctx.drawImage(boneImage, block.x, block.y, boneWidth, boneHeight);
-            }
-        });
-    }
-
-    function drawGhost() {
-        if (ghostObject) {
-            ctx.drawImage(ghostImage, ghostObject.x, ghostObject.y, ghostObject.size, ghostObject.size);
-            ghostObject.x += ghostObject.dx;
-            ghostObject.y += ghostObject.dy;
-
-            if (
-                ghostObject.x + ghostObject.size <= 0 ||
-                ghostObject.x >= canvas.width ||
-                ghostObject.y + ghostObject.size <= 0 ||
-                ghostObject.y >= canvas.height
-            ) {
-                souls++;
-                ghostObject = null;
-            }
-        }
-    }
-
-    restartButton.addEventListener('click', () => {
-        resetGame();
-        startGame();
-    });
-};
+            const tempoIncrease = Math.min(tempoIncreaseFactor, (elapsed /
