@@ -51,14 +51,14 @@ window.onload = function() {
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
 
-    // Unlock audio on first user interaction
-    function unlockAudio() {
-        document.removeEventListener('click', unlockAudio);
-        document.removeEventListener('keydown', unlockAudio);
+function unlockAudio() {
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('keydown', unlockAudio);
 
-        introMusic.play().catch(() => {});
-        themeMusic.play().catch(() => {});
-    }
+    // Attempt to play intro and theme music
+    introMusic.play().catch(err => console.error("Intro music error:", err));
+    themeMusic.play().catch(err => console.error("Theme music error:", err));
+}
     document.addEventListener('click', unlockAudio);
     document.addEventListener('keydown', unlockAudio);
 
