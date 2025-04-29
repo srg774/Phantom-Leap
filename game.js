@@ -60,6 +60,7 @@ function unlockAudio() {
     themeMusic.play().catch(err => console.error("Theme music error:", err));
 }
     document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
     document.addEventListener('keydown', unlockAudio);
 
     const blocks = [];
