@@ -85,63 +85,75 @@ function unlockAudio() {
         showReadyScreen();
     }
 
-    function showReadyScreen() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
+function showReadyScreen() {
+    // Stop theme music if it's playing
+    themeMusic.pause();
+    themeMusic.currentTime = 0; // Reset the time to the beginning
+    themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
 
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Creepster';
+    ctx.textAlign = 'center';
 
-        ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
+    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+    ctx.shadowBlur = 15;
 
-        ctx.shadowColor = 'transparent';
+    ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
 
-        readySound.play();
-        setTimeout(() => {
-            showGoScreen();
-        }, 2000);
-    }
+    ctx.shadowColor = 'transparent';
 
-    function showGoScreen() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
+    readySound.play();
+    setTimeout(() => {
+        showGoScreen();
+    }, 2000);
+}
 
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
+function showGoScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Creepster';
+    ctx.textAlign = 'center';
 
-        ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
+    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+    ctx.shadowBlur = 15;
 
-        goSound.play();
-        setTimeout(() => {
-            resetGame();
-            introMusic.pause();
-            introMusic.currentTime = 0;
-            themeMusic.play();
-            themeMusicStartTime = performance.now();
-            requestAnimationFrame(gameLoop);
-        }, 1000);
+    ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
 
-        ctx.shadowColor = 'transparent';
-    }
+    goSound.play();
+    setTimeout(() => {
+        resetGame();
+        introMusic.pause();
+        introMusic.currentTime = 0; // Reset the intro music time
+        themeMusic.currentTime = 0; // Ensure theme music starts fresh
+        themeMusic.play();
+        themeMusicStartTime = performance.now(); // Reset the theme music start time
+        themeMusic.volume = 0.2; // Ensure proper volume
+        themeMusic.playbackRate = 1.0; // Reset playback speed to normal
+        requestAnimationFrame(gameLoop);
+    }, 1000);
 
-    function resetGame() {
-        isGameOver = false;
-        gameSpeed = 0.5;
-        score = 0;
-        souls = 0;
-        playerX = canvas.width / 2 - playerWidth / 2;
-        playerY = canvas.height / 2 - playerHeight / 2;
-        playerVelocityY = 0;
-        playerVelocityX = 0;
-        blocks.length = 0;
-        ghostObject = null;
-        generateInitialBlocks();
-        restartButton.style.display = 'none';
-    }
+    ctx.shadowColor = 'transparent';
+}
+
+function resetGame() {
+    isGameOver = false;
+    gameSpeed = 0.5;
+    score = 0;
+    souls = 0;
+    playerX = canvas.width / 2 - playerWidth / 2;
+    playerY = canvas.height / 2 - playerHeight / 2;
+    playerVelocityY = 0;
+    playerVelocityX = 0;
+    blocks.length = 0;
+    ghostObject = null;
+    generateInitialBlocks();
+    restartButton.style.display = 'none';
+
+    // Reset theme music settings
+    themeMusic.currentTime = 0; // Start from the beginning when we reset
+    themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
+}
 
     function generateInitialBlocks() {
         for (let i = 0; i < 5; i++) {
