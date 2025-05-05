@@ -1,3 +1,4 @@
+
 window.onload = function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -37,63 +38,28 @@ window.onload = function() {
     const ghostImage = new Image();
     ghostImage.src = 'assets/spriteghost.png';
 
-let audioContext = new (window.AudioContext || window.webkitAudioContext)();
-const sounds = {};
-let themeSource = null;
+    const themeMusic = new Audio('assets/theme.mp3');
+    themeMusic.loop = true;
+    themeMusic.volume = 0.2;
 
-function loadSound(name, url, options = {}) {
-    fetch(url)
-        .then(res => res.arrayBuffer())
-        .then(data => audioContext.decodeAudioData(data))
-        .then(buffer => {
-            sounds[name] = {
-                buffer,
-                loop: options.loop || false,
-                volume: options.volume ?? 1.0
-            };
-        })
-        .catch(err => console.error(`Failed to load sound "${name}":`, err));
-}
+    const introMusic = new Audio('assets/intro.mp3');
+    introMusic.volume = 0.5;
 
-function playSound(name) {
-    const s = sounds[name];
-    if (!s) return;
-
-    const source = audioContext.createBufferSource();
-    const gain = audioContext.createGain();
-
-    source.buffer = s.buffer;
-    source.loop = s.loop;
-    gain.gain.value = s.volume;
-
-    source.connect(gain).connect(audioContext.destination);
-    source.start(0);
-
-    return source; // return for optional stop control
-}
-
-// Load all audio assets
-loadSound('theme', 'assets/theme.mp3', { loop: true, volume: 0.2 });
-loadSound('intro', 'assets/intro.mp3', { volume: 0.5 });
-loadSound('jump', 'assets/jump.ogg');
-loadSound('ghost', 'assets/ghost.ogg');
-loadSound('die', 'assets/die.ogg');
-loadSound('ready', 'assets/ready.ogg');
-loadSound('go', 'assets/go.ogg');
-loadSound('end', 'assets/end.mp3');
+    const jumpSound = new Audio('assets/jump.ogg');
+    const ghostSound = new Audio('assets/ghost.ogg');
+    const dieSound = new Audio('assets/die.ogg');
+    const readySound = new Audio('assets/ready.ogg');
+    const goSound = new Audio('assets/go.ogg');
+    const endMusic = new Audio('assets/end.mp3');
 
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('keydown', unlockAudio);
 
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-
-    playSound('intro');
-    themeSource = playSound('theme');
+    // Attempt to play intro and theme music
+    introMusic.play().catch(err => console.error("Intro music error:", err));
+    themeMusic.play().catch(err => console.error("Theme music error:", err));
 }
-
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
     document.addEventListener('keydown', unlockAudio);
@@ -138,7 +104,7 @@ function showReadyScreen() {
 
     ctx.shadowColor = 'transparent';
 
-    playSound('ready');
+    readySound.play();
     setTimeout(() => {
         showGoScreen();
     }, 2000);
@@ -155,13 +121,13 @@ function showGoScreen() {
 
     ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
 
-    playSound('go');
+    goSound.play();
     setTimeout(() => {
         resetGame();
         introMusic.pause();
         introMusic.currentTime = 0; // Reset the intro music time
         themeMusic.currentTime = 0; // Ensure theme music starts fresh
-        themeSource = playSound('theme');
+        themeMusic.play();
         themeMusicStartTime = performance.now(); // Reset the theme music start time
         themeMusic.volume = 0.2; // Ensure proper volume
         themeMusic.playbackRate = 1.0; // Reset playback speed to normal
@@ -224,7 +190,7 @@ function resetGame() {
                 jump();
                 jumpRequested = true;
                 currentPlayerImage = playerImageJump;
-                playSound('jump');;
+                jumpSound.play();
             }
         }
     });
@@ -295,7 +261,7 @@ function resetGame() {
                         dy: -2
                     };
                     ghostSound.currentTime = 0;
-                    playSound('ghost'); // Now plays when ghost appears
+                    ghostSound.play(); // Now plays when ghost appears
                 }
             }
         });
@@ -319,7 +285,7 @@ function resetGame() {
     function gameLoop(timestamp) {
         if (isGameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            playSound('end');
+            endMusic.play();
 
             let endMessage;
             if (souls < 100) {
@@ -347,7 +313,7 @@ function resetGame() {
             restartButton.style.display = 'block';
             ctx.shadowColor = 'transparent';
 
-            if (themeSource) themeSource.stop();
+            themeMusic.pause();
             themeMusic.currentTime = 0;
 
             return;
