@@ -333,7 +333,7 @@ function resetGame() {
             ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2 - 20);
             ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
             ctx.font = '16px Creepster';
-            ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 60);
+            ctx.fillText('If notification, try "Do Not Disturb" By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 60);
 
             restartButton.style.display = 'block';
             ctx.shadowColor = 'transparent';
