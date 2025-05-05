@@ -58,6 +58,11 @@ function unlockAudio() {
     // Attempt to play intro and theme music
     introMusic.play().catch(err => console.error("Intro music error:", err));
     themeMusic.play().catch(err => console.error("Theme music error:", err));
+
+    // Initialize Media Session on first audio unlock
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing'; // Assume playing after unlock
+    }
 }
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
@@ -90,6 +95,11 @@ function showReadyScreen() {
     themeMusic.pause();
     themeMusic.currentTime = 0; // Reset the time to the beginning
     themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
+
+    // Update Media Session state
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = 'red';
@@ -130,6 +140,12 @@ function showGoScreen() {
         themeMusicStartTime = performance.now(); // Reset the theme music start time
         themeMusic.volume = 0.2; // Ensure proper volume
         themeMusic.playbackRate = 1.0; // Reset playback speed to normal
+
+        // Update Media Session state
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'playing';
+        }
+
         requestAnimationFrame(gameLoop);
     }, 1000);
 
@@ -153,6 +169,11 @@ function resetGame() {
     // Reset theme music settings
     themeMusic.currentTime = 0; // Start from the beginning when we reset
     themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
+
+    // Update Media Session state
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+    }
 }
 
     function generateInitialBlocks() {
@@ -285,6 +306,11 @@ function resetGame() {
         if (isGameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             endMusic.play();
+
+            // Update Media Session state
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'paused';
+            }
 
             let endMessage;
             if (souls < 100) {
