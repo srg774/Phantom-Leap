@@ -12,7 +12,15 @@ const CACHE_ASSETS = [
     'assets/favicon.ico',
     'assets/apple-touch-icon.png',
     'assets/startup-image.png',
-    'assets/media.png' // Add any other files you need to cache
+    'assets/media.png', // Add any other files you need to cache
+    'assets/theme.mp3', // Add the audio file for caching
+    'assets/intro.mp3', // Add any other audio files you might use
+    'assets/jump.ogg',
+    'assets/ghost.ogg',
+    'assets/die.ogg',
+    'assets/ready.ogg',
+    'assets/go.ogg',
+    'assets/end.mp3'
 ];
 
 // Install event
@@ -49,19 +57,39 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch event
+// Fetch event with enhanced caching
 self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
+    // Check for specific requests like audio or game assets
+    if (event.request.url.includes('.mp3') || event.request.url.includes('.ogg')) {
+        event.respondWith(
+            caches.match(event.request).then((cachedResponse) => {
                 if (cachedResponse) {
-                    return cachedResponse; // Return cached response if available
+                    // Return the cached response if available
+                    return cachedResponse;
                 }
-                return fetch(event.request); // Fetch from network if not in cache
+                return fetch(event.request).then((response) => {
+                    // Cache the audio or media file dynamically if it's not cached
+                    return caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, response.clone());
+                        return response;
+                    });
+                });
             })
-            .catch((error) => {
-                console.error('Fetching failed:', error);
-                throw error;
-            })
-    );
+        );
+    } else {
+        // Handle other fetch requests (HTML, CSS, JS, etc.)
+        event.respondWith(
+            caches.match(event.request)
+                .then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse; // Return cached response if available
+                    }
+                    return fetch(event.request); // Fetch from network if not in cache
+                })
+                .catch((error) => {
+                    console.error('Fetching failed:', error);
+                    throw error;
+                })
+        );
+    }
 });
