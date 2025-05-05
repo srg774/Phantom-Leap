@@ -289,7 +289,7 @@ function resetGame() {
             let endMessage;
             if (souls < 100) {
                 endMessage = "Ghosted!";
-            } else if (souls < 300) {
+            } else if (souls < 200) {
                 endMessage = "Spooky Score!";
             } else {
                 endMessage = "Hauntingly Good!";
