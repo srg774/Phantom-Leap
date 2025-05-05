@@ -1,3 +1,4 @@
+
 window.onload = function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -51,23 +52,14 @@ window.onload = function() {
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
 
-    function unlockAudio() {
-        document.removeEventListener('click', unlockAudio);
-        document.removeEventListener('touchstart', unlockAudio);
-        document.removeEventListener('keydown', unlockAudio);
+function unlockAudio() {
+    document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('keydown', unlockAudio);
 
-        introMusic.load();
-        themeMusic.load();
-        jumpSound.load();
-        ghostSound.load();
-        dieSound.load();
-        readySound.load();
-        goSound.load();
-        endMusic.load();
-
-        introMusic.play().catch(err => console.error("Intro music error:", err));
-    }
-
+    // Attempt to play intro and theme music
+    introMusic.play().catch(err => console.error("Intro music error:", err));
+    themeMusic.play().catch(err => console.error("Theme music error:", err));
+}
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
     document.addEventListener('keydown', unlockAudio);
@@ -94,75 +86,75 @@ window.onload = function() {
         showReadyScreen();
     }
 
-    function showReadyScreen() {
-        // Stop theme music if it's playing
-        themeMusic.pause();
-        themeMusic.currentTime = 0; // Reset the time to the beginning
-        themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
+function showReadyScreen() {
+    // Stop theme music if it's playing
+    themeMusic.pause();
+    themeMusic.currentTime = 0; // Reset the time to the beginning
+    themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Creepster';
+    ctx.textAlign = 'center';
 
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+    ctx.shadowBlur = 15;
 
-        ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
 
-        ctx.shadowColor = 'transparent';
+    ctx.shadowColor = 'transparent';
 
-        readySound.play();
-        setTimeout(() => {
-            showGoScreen();
-        }, 2000);
-    }
+    readySound.play();
+    setTimeout(() => {
+        showGoScreen();
+    }, 2000);
+}
 
-    function showGoScreen() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
+function showGoScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Creepster';
+    ctx.textAlign = 'center';
 
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+    ctx.shadowBlur = 15;
 
-        ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
+    ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
 
-        goSound.play();
-        setTimeout(() => {
-            resetGame();
-            introMusic.pause();
-            introMusic.currentTime = 0;
-            themeMusic.currentTime = 0;
-            themeMusic.play().catch(err => console.error("Theme music start error:", err)); // Play theme music here
-            themeMusicStartTime = performance.now();
-            themeMusic.volume = 0.2;
-            themeMusic.playbackRate = 1.0;
-            requestAnimationFrame(gameLoop);
-        }, 1000);
+    goSound.play();
+    setTimeout(() => {
+        resetGame();
+        introMusic.pause();
+        introMusic.currentTime = 0; // Reset the intro music time
+        themeMusic.currentTime = 0; // Ensure theme music starts fresh
+        themeMusic.play();
+        themeMusicStartTime = performance.now(); // Reset the theme music start time
+        themeMusic.volume = 0.2; // Ensure proper volume
+        themeMusic.playbackRate = 1.0; // Reset playback speed to normal
+        requestAnimationFrame(gameLoop);
+    }, 1000);
 
-        ctx.shadowColor = 'transparent';
-    }
+    ctx.shadowColor = 'transparent';
+}
 
-    function resetGame() {
-        isGameOver = false;
-        gameSpeed = 0.5;
-        score = 0;
-        souls = 0;
-        playerX = canvas.width / 2 - playerWidth / 2;
-        playerY = canvas.height / 2 - playerHeight / 2;
-        playerVelocityY = 0;
-        playerVelocityX = 0;
-        blocks.length = 0;
-        ghostObject = null;
-        generateInitialBlocks();
-        restartButton.style.display = 'none';
+function resetGame() {
+    isGameOver = false;
+    gameSpeed = 0.5;
+    score = 0;
+    souls = 0;
+    playerX = canvas.width / 2 - playerWidth / 2;
+    playerY = canvas.height / 2 - playerHeight / 2;
+    playerVelocityY = 0;
+    playerVelocityX = 0;
+    blocks.length = 0;
+    ghostObject = null;
+    generateInitialBlocks();
+    restartButton.style.display = 'none';
 
-        // Reset theme music settings
-        themeMusic.currentTime = 0; // Start from the beginning when we reset
-        themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
-    }
+    // Reset theme music settings
+    themeMusic.currentTime = 0; // Start from the beginning when we reset
+    themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
+}
 
     function generateInitialBlocks() {
         for (let i = 0; i < 5; i++) {
