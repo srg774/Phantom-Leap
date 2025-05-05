@@ -53,30 +53,27 @@ window.onload = function() {
 
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
-    document.removeEventListener('touchstart', unlockAudio);
     document.removeEventListener('keydown', unlockAudio);
 
-    // Attempt to play intro music
+    // Attempt to play intro and theme music
     introMusic.play().catch(err => console.error("Intro music error:", err));
+    themeMusic.play().catch(err => console.error("Theme music error:", err));
 }
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
 
-// ...
+    const blocks = [];
+    const blockWidth = 50;
+    const blockHeight = 15;
+    const blockSpacing = 200;
 
-function showGoScreen() {
-    // ...
-    setTimeout(() => {
-        resetGame();
-        introMusic.pause();
-        introMusic.currentTime = 0;
-        themeMusic.currentTime = 0;
-        themeMusic.play(); // Play theme music only when the game starts
-        themeMusicStartTime = performance.now();
-        themeMusic.volume = 0.2;
-        themeMusic.playbackRate = 1.0;
-        requestAnimationFrame(gameLoop);
-    }, 1000);
-    // ...
-}
+    let imagesLoaded = 0;
+    playerImageRight.onload = playerImageLeft.onload = playerImageJump.onload = boneImage.onload = selectedBoneImage.onload = ghostImage.onload = function() {
+        imagesLoaded++;
+        if (imagesLoaded === 6) {
+            startGame();
+        }
     };
 
     const baseTempo = 1.0;
