@@ -54,11 +54,18 @@ window.onload = function() {
 
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio);
     document.removeEventListener('keydown', unlockAudio);
 
-    // Attempt to play intro and theme music
-    introMusic.play().catch(err => console.error("Intro music error:", err));
-    themeMusic.play().catch(err => console.error("Theme music error:", err));
+    // Prepare the audio for later playback
+    introMusic.load();
+    themeMusic.load();
+    jumpSound.load();
+    ghostSound.load();
+    dieSound.load();
+    readySound.load();
+    goSound.load();
+    endMusic.load();
 }
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
