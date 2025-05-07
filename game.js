@@ -299,7 +299,7 @@ function resetGame() {
         });
     }
 
-    const blockGenerationInterval = 1000;
+    const blockGenerationInterval = 900;
     let lastBlockGenerationTime = 0;
 
     function gameLoop(timestamp) {
