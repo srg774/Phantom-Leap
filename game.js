@@ -266,7 +266,7 @@ function resetGame() {
                 score += 1;
 
                 if (gameSpeed < maxSpeed) {
-                    gameSpeed += 0.01;
+                    gameSpeed += 0.005;
                     themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3);
                 }
 
