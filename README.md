@@ -2,9 +2,9 @@
 
 **https://srg774.github.io/Phantom-Leap/**
 
-# Ghost Jump
+# Phantom Leap
 
-**Ghost Jump** is a spooky-themed vertical platformer game created using HTML5 Canvas and JavaScript. Players control a ghostly character that jumps across falling bones while collecting souls and avoiding a haunting demise.
+**Phantom Leap** is a spooky-themed vertical platformer game created using HTML5 Canvas and JavaScript. Players control a ghostly character that jumps across falling bones while collecting souls and avoiding a haunting demise.
 
 ## 🎮 Gameplay Overview
 
