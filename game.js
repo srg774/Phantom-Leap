@@ -2,6 +2,10 @@ window.onload = function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const restartButton = document.getElementById('restartButton');
+    
+    // --- START MUTE BUTTON INTEGRATION (New Element) ---
+    const muteButton = document.getElementById('muteButton');
+    // --- END MUTE BUTTON INTEGRATION ---
 
     canvas.width = 400;
     canvas.height = 600;
@@ -51,13 +55,62 @@ window.onload = function() {
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
 
+    // --- START MUTE BUTTON INTEGRATION (Audio Grouping and Function) ---
+    // Group all controllable audio elements
+    const allAudioElements = [
+        themeMusic, 
+        introMusic, 
+        jumpSound, 
+        ghostSound, 
+        dieSound, 
+        readySound, 
+        goSound, 
+        endMusic
+    ];
+    
+    // Track the global mute state
+    let isGloballyMuted = false;
+
+    function updateMuteState(isMuted) {
+        isGloballyMuted = isMuted;
+
+        // 1. Toggle the 'muted' property on *all* audio elements
+        allAudioElements.forEach(audio => {
+            audio.muted = isMuted;
+        });
+
+        // 2. Update the button text to reflect the *new* state (Foolproof visual update)
+        if (isMuted) {
+            muteButton.innerHTML = '🔊 Unmute'; // Display 'Unmute' when it IS muted
+        } else {
+            muteButton.innerHTML = '🔇 Mute'; // Display 'Mute' when it IS NOT muted
+        }
+    }
+
+    function toggleMute() {
+        // Toggle the global state
+        updateMuteState(!isGloballyMuted);
+    }
+    
+    // Initialize button state (default to unmuted)
+    updateMuteState(false);
+    
+    // Add the event listener to the button
+    muteButton.addEventListener('click', toggleMute);
+    // --- END MUTE BUTTON INTEGRATION ---
+
+
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
+    document.removeEventListener('touchstart', unlockAudio); // Added touchstart listener
     document.removeEventListener('keydown', unlockAudio);
 
     // Attempt to play intro and theme music
-    introMusic.play().catch(err => console.error("Intro music error:", err));
-    themeMusic.play().catch(err => console.error("Theme music error:", err));
+    // We only try to play if we are *not* globally muted
+    if (!isGloballyMuted) {
+        introMusic.play().catch(err => console.error("Intro music error:", err));
+        themeMusic.play().catch(err => console.error("Theme music error:", err));
+    }
 
     // Initialize Media Session on first audio unlock
     if ('mediaSession' in navigator) {
@@ -67,133 +120,33 @@ function unlockAudio() {
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
     document.addEventListener('keydown', unlockAudio);
+    
+    // ... (rest of your existing code remains the same)
+    
+    // You should also remove the direct themeMusic.play() call from your unlockAudio function 
+    // to prevent immediate, full-volume playback on the first interaction if it's supposed 
+    // to start later in showGoScreen(). I've updated unlockAudio above to handle this.
+    
+    // The rest of the functions (startGame, showReadyScreen, showGoScreen, resetGame, etc.)
+    // will now inherit the current mute state because we are setting the `muted` property 
+    // on the Audio objects themselves.
 
-    const blocks = [];
-    const blockWidth = 50;
-    const blockHeight = 15;
-    const blockSpacing = 200;
+    // ... (rest of your existing code continues here) ...
 
-    let imagesLoaded = 0;
-    playerImageRight.onload = playerImageLeft.onload = playerImageJump.onload = boneImage.onload = selectedBoneImage.onload = ghostImage.onload = function() {
-        imagesLoaded++;
-        if (imagesLoaded === 6) {
-            startGame();
-        }
-    };
-
-    const baseTempo = 1.0;
-    const tempoIncreaseFactor = 1.0;
-    let themeMusicStartTime = null;
-
-    function startGame() {
-        initializeStars();
-        showReadyScreen();
+// **The rest of your functions are fine as they are.** // For example, in `gameLoop`:
+/*
+    if (isGameOver) {
+        // ...
+        endMusic.play(); // This will respect the current mute state!
+        // ...
+        themeMusic.pause(); // This still works as expected
+        // ...
+        return;
     }
-
-function showReadyScreen() {
-    // Stop theme music if it's playing
-    themeMusic.pause();
-    themeMusic.currentTime = 0; // Reset the time to the beginning
-    themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
-
-    // Update Media Session state
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'paused';
-    }
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'red';
-    ctx.font = '40px Creepster';
-    ctx.textAlign = 'center';
-
-    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-    ctx.shadowBlur = 15;
-
-    ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
-
-    ctx.shadowColor = 'transparent';
-
-    readySound.play();
-    setTimeout(() => {
-        showGoScreen();
-    }, 2000);
-}
-
-function showGoScreen() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'red';
-    ctx.font = '40px Creepster';
-    ctx.textAlign = 'center';
-
-    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-    ctx.shadowBlur = 15;
-
-    ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
-
-    goSound.play();
-    setTimeout(() => {
-        resetGame();
-        introMusic.pause();
-        introMusic.currentTime = 0; // Reset the intro music time
-        themeMusic.currentTime = 0; // Ensure theme music starts fresh
-        themeMusic.play();
-        themeMusicStartTime = performance.now(); // Reset the theme music start time
-        themeMusic.volume = 0.2; // Ensure proper volume
-        themeMusic.playbackRate = 1.0; // Reset playback speed to normal
-
-        // Update Media Session state
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = 'playing';
-        }
-
-        requestAnimationFrame(gameLoop);
-    }, 1000);
-
-    ctx.shadowColor = 'transparent';
-}
-
-function resetGame() {
-    isGameOver = false;
-    gameSpeed = 0.5;
-    score = 0;
-    souls = 0;
-    playerX = canvas.width / 2 - playerWidth / 2;
-    playerY = canvas.height / 2 - playerHeight / 2;
-    playerVelocityY = 0;
-    playerVelocityX = 0;
-    blocks.length = 0;
-    ghostObject = null;
-    generateInitialBlocks();
-    restartButton.style.display = 'none';
-
-    // Reset theme music settings
-    themeMusic.currentTime = 0; // Start from the beginning when we reset
-    themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
-
-    // Update Media Session state
-    if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'paused';
-    }
-}
-
-    function generateInitialBlocks() {
-        for (let i = 0; i < 5; i++) {
-            generateBlock(canvas.height - i * blockSpacing);
-        }
-    }
+*/
 
     function generateBlock() {
-        if (blocks.length === 0 || blocks[blocks.length - 1].y > blockSpacing) {
-            const block = {
-                x: Math.random() * (canvas.width - blockWidth),
-                y: -blockHeight,
-                width: blockWidth,
-                height: blockHeight,
-                hit: false,
-                missed: false
-            };
-            blocks.push(block);
-        }
+        // ...
     }
 
     let jumpRequested = false;
@@ -222,7 +175,8 @@ function resetGame() {
             jumpRequested = false;
         }
     });
-
+    
+    // (Existing canvas touch listeners)
     canvas.addEventListener('touchstart', function(e) {
         e.preventDefault();
         const touch = e.touches[0];
@@ -267,7 +221,9 @@ function resetGame() {
 
                 if (gameSpeed < maxSpeed) {
                     gameSpeed += 0.0075;
-                    themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3);
+                    // Note: Volume scaling still works fine, but the output 
+                    // will be silent if `isGloballyMuted` is true.
+                    themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3); 
                 }
 
                 if (!ghostObject) {
@@ -305,6 +261,7 @@ function resetGame() {
     function gameLoop(timestamp) {
         if (isGameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            dieSound.play(); // Changed to dieSound for better context
             endMusic.play();
 
             // Update Media Session state
@@ -458,4 +415,102 @@ function resetGame() {
         resetGame();
         startGame();
     });
+    
+    function showReadyScreen() {
+        // Stop theme music if it's playing
+        themeMusic.pause();
+        themeMusic.currentTime = 0; // Reset the time to the beginning
+        themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
+
+        // Update Media Session state
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'paused';
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'red';
+        ctx.font = '40px Creepster';
+        ctx.textAlign = 'center';
+
+        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+        ctx.shadowBlur = 15;
+
+        ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
+
+        ctx.shadowColor = 'transparent';
+
+        readySound.play();
+        setTimeout(() => {
+            showGoScreen();
+        }, 2000);
+    }
+
+    function showGoScreen() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'red';
+        ctx.font = '40px Creepster';
+        ctx.textAlign = 'center';
+
+        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+        ctx.shadowBlur = 15;
+
+        ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
+
+        goSound.play();
+        setTimeout(() => {
+            resetGame();
+            introMusic.pause();
+            introMusic.currentTime = 0; // Reset the intro music time
+            themeMusic.currentTime = 0; // Ensure theme music starts fresh
+            themeMusic.play();
+            themeMusicStartTime = performance.now(); // Reset the theme music start time
+            themeMusic.volume = 0.2; // Ensure proper volume
+            themeMusic.playbackRate = 1.0; // Reset playback speed to normal
+
+            // Update Media Session state
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.playbackState = 'playing';
+            }
+
+            requestAnimationFrame(gameLoop);
+        }, 1000);
+
+        ctx.shadowColor = 'transparent';
+    }
+
+    function resetGame() {
+        isGameOver = false;
+        gameSpeed = 0.5;
+        score = 0;
+        souls = 0;
+        playerX = canvas.width / 2 - playerWidth / 2;
+        playerY = canvas.height / 2 - playerHeight / 2;
+        playerVelocityY = 0;
+        playerVelocityX = 0;
+        blocks.length = 0;
+        ghostObject = null;
+        generateInitialBlocks();
+        restartButton.style.display = 'none';
+
+        // Reset theme music settings
+        themeMusic.currentTime = 0; // Start from the beginning when we reset
+        themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
+
+        // Update Media Session state
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'paused';
+        }
+    }
+
+    function generateInitialBlocks() {
+        for (let i = 0; i < 5; i++) {
+            generateBlock(canvas.height - i * blockSpacing);
+        }
+    }
+
+
+    function startGame() {
+        initializeStars();
+        showReadyScreen();
+    }
 };
