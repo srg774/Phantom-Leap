@@ -4,7 +4,6 @@ window.onload = function() {
     const restartButton = document.getElementById('restartButton');
     
     // --- MUTE ICON CONFIGURATION ---
-    // Position the icon near the top-left, slightly below the "Souls" text (which is at y=30)
     const MUTE_ICON_X = 10;
     const MUTE_ICON_Y = 60; 
     const MUTE_ICON_SIZE = 25;
@@ -59,8 +58,7 @@ window.onload = function() {
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
     
-    // --- MUTE BUTTON INTEGRATION (Audio Grouping and Function) ---
-    // Group all controllable audio elements
+    // --- MUTE INTEGRATION ---
     const allAudioElements = [
         themeMusic, 
         introMusic, 
@@ -77,34 +75,28 @@ window.onload = function() {
     function updateMuteState(isMuted) {
         isGloballyMuted = isMuted;
 
-        // Toggle the 'muted' property on *all* audio elements
         allAudioElements.forEach(audio => {
             audio.muted = isMuted;
         });
-        // Note: No need to update button text, the draw function handles the icon state
     }
 
     function toggleMute() {
-        // Toggle the global state
         updateMuteState(!isGloballyMuted);
     }
     
-    // Initialize mute state (default to unmuted)
     updateMuteState(false);
-    // ------------------------------------------------------------------
+    // ------------------------
 
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
     document.removeEventListener('keydown', unlockAudio);
 
-    // Only attempt to play music if we are *not* currently muted
     if (!isGloballyMuted) {
         introMusic.play().catch(err => console.error("Intro music error:", err));
         themeMusic.play().catch(err => console.error("Theme music error:", err));
     }
 
-    // Initialize Media Session on first audio unlock
     if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
     }
@@ -263,8 +255,8 @@ function resetGame() {
         }
     });
     
-    // --- NEW: HANDLE CLICK/TOUCH ON CANVAS TO MUTE ---
-    function handleCanvasClick(e) {
+    // --- FIXED: CONSOLIDATED INPUT HANDLER FOR MUTE ICON AND PLAYER MOVEMENT ---
+    function handleInput(e) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
@@ -276,7 +268,7 @@ function resetGame() {
         const canvasX = (clientX - rect.left) * scaleX;
         const canvasY = (clientY - rect.top) * scaleY;
         
-        // Check if the click/touch occurred within the MUTE ICON area
+        // 1. Mute Icon Click Check (Hitbox priority)
         if (
             canvasX >= MUTE_ICON_X && 
             canvasX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
@@ -284,50 +276,49 @@ function resetGame() {
             canvasY <= MUTE_ICON_Y + MUTE_ICON_SIZE
         ) {
             toggleMute();
-            // Prevent other canvas click handlers (like movement/jump) from triggering
             e.preventDefault(); 
-            e.stopPropagation();
+            e.stopPropagation(); // Stop event propagation to prevent triggering default browser behavior
+            return; 
+        }
+        
+        // 2. Player Movement/Jump Logic (Only run for touchstart/click events)
+        if (e.type === 'touchstart' || e.type === 'click') {
+            e.preventDefault();
+            
+            // Determine player movement direction
+            if (canvasX < canvas.width / 2) {
+                playerVelocityX = -playerSpeed;
+                currentPlayerImage = playerImageLeft;
+            } else {
+                playerVelocityX = playerSpeed;
+                currentPlayerImage = playerImageRight;
+            }
+            
+            // Handle jump request
+            if (!jumpRequested) {
+                jump();
+                jumpRequested = true;
+                currentPlayerImage = playerImageJump;
+                jumpSound.play();
+            }
+        }
+        
+        // 3. Touch End Handling (for releasing movement)
+        if (e.type === 'touchend') {
+            playerVelocityX = 0;
+            jumpRequested = false;
         }
     }
 
-    canvas.addEventListener('click', handleCanvasClick);
-    canvas.addEventListener('touchstart', handleCanvasClick);
-
-    // Keep the existing jump/movement logic for touches outside the icon area
-    canvas.addEventListener('touchstart', function(e) {
-        // Check if the event was already handled by the mute button logic
-        if (e.defaultPrevented) return;
-
-        e.preventDefault();
-        const touch = e.touches[0];
-        // Calculate canvas coordinates (simplified for movement, based on half the canvas)
-        const touchX = touch.clientX - canvas.getBoundingClientRect().left;
-
-        if (touchX < canvas.width / 2) {
-            playerVelocityX = -playerSpeed;
-            currentPlayerImage = playerImageLeft;
-        } else {
-            playerVelocityX = playerSpeed;
-            currentPlayerImage = playerImageRight;
-        }
-        if (!jumpRequested) {
-            jump();
-            jumpRequested = true;
-            currentPlayerImage = playerImageJump;
-            jumpSound.play();
-        }
-    });
-
-    canvas.addEventListener('touchend', function(e) {
-        playerVelocityX = 0;
-        jumpRequested = false;
-    });
+    // Attach the new consolidated handler to all relevant events:
+    canvas.addEventListener('click', handleInput);
+    canvas.addEventListener('touchstart', handleInput);
+    canvas.addEventListener('touchend', handleInput); 
+    // -------------------------------------------------------------------------
 
     function jump() {
         playerVelocityY = -jumpStrength;
     }
-    // ---------------------------------------------------
-
 
     let ghostObject = null;
 
@@ -467,34 +458,29 @@ function resetGame() {
         ctx.fillText('Souls: ' + souls, 10, 30);
         ctx.shadowColor = 'transparent'; // Reset shadow
 
-        // Draw Mute Icon (Calls the new function)
+        // Draw Mute Icon
         drawMuteIcon();
         // ------------------------
 
         requestAnimationFrame(gameLoop);
     }
 
-    // --- NEW: CANVAS DRAW MUTE ICON FUNCTION ---
     function drawMuteIcon() {
-        ctx.font = `${MUTE_ICON_SIZE}px sans-serif`; // Use standard font for the Unicode symbol
+        ctx.font = `${MUTE_ICON_SIZE}px sans-serif`; 
         ctx.textAlign = 'left';
         
-        const iconSymbol = isGloballyMuted ? '🔇' : '🔊'; // Toggle symbol
+        const iconSymbol = isGloballyMuted ? '🔇' : '🔊'; 
         
-        ctx.fillStyle = isGloballyMuted ? '#FF0000' : '#00FF00'; // Red when muted, green when unmuted
+        ctx.fillStyle = isGloballyMuted ? '#FF0000' : '#00FF00'; 
         
-        // Add a slight glow effect for visibility
         ctx.shadowColor = ctx.fillStyle;
         ctx.shadowBlur = 8;
         
-        // Draw the icon
         ctx.fillText(iconSymbol, MUTE_ICON_X, MUTE_ICON_Y);
 
-        // Reset shadows and color so they don't affect other drawings
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
     }
-    // -------------------------------------------
 
 
     let starData = [];
