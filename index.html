@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Leap</title>
     
-    <!-- Favicon and icons -->
     <link rel="icon" href="https://raw.githubusercontent.com/srg774/Phantom-Leap/refs/heads/main/assets/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="https://srg774.github.io/Phantom-Leap/assets/apple-touch-icon.png">
     <link rel="apple-touch-startup-image" href="https://srg774.github.io/Phantom-Leap/assets/startup-image.png">
     <link rel="manifest" href="https://srg774.github.io/Phantom-Leap/manifest.json">
 
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Phantom Leap Game">
     <meta property="og:description" content="Take a leap of faith">
     <meta property="og:image" content="https://raw.githubusercontent.com/srg774/Phantom-Leap/7add468e4f8c082e4dcb0433ad2fa9c5c50cf9e7/assets/media.png">
@@ -19,14 +17,11 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Phantom Leap">
 
-    <!-- Additional Meta Tags for Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Phantom Leap Game">
     <meta name="twitter:description" content="Take a leap of faith">
     <meta name="twitter:image" content="https://raw.githubusercontent.com/srg774/Phantom-Leap/7add468e4f8c082e4dcb0433ad2fa9c5c50cf9e7/assets/media.png">
-    <meta name="twitter:site" content="@YourTwitterHandle"> <!-- Replace with your Twitter handle if desired -->
-
-    <style>
+    <meta name="twitter:site" content="@YourTwitterHandle"> <style>
         body {
             margin: 0;
             overflow: hidden;
@@ -40,21 +35,29 @@
             background-color: #000000; /* Canvas background black */
             margin: 0 auto; /* Center the canvas horizontally */
         }
+        
+        /* General button styling */
+        .game-button {
+            position: fixed;
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #000000;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+        }
+
+        /* Restart Button Styling */
         #restartButton {
             display: none;
-            position: fixed; /* Fixed position to stay in place when scrolling */
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
             padding: 15px 30px;
             font-size: 22px;
-            background-color: #000000; /* Button background black */
             color: #00FF00; /* Neon green text color */
             border: 3px solid #00FF00; /* Neon green border */
-            border-radius: 8px;
-            cursor: pointer;
             box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Black and green glowing effect */
-            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
         }
         #restartButton:hover {
             background-color: #00FF00; /* Neon green background on hover */
@@ -62,6 +65,23 @@
             transform: translateX(-50%) scale(1.05); /* Slightly enlarge on hover */
             box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
         }
+
+        /* Mute/Unmute Button Styling (New) */
+        #muteToggleButton {
+            top: 20px;
+            right: 20px; /* Position on the top right */
+            color: #FF0000; /* Red text color */
+            border: 3px solid #FF0000; /* Red border */
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); /* Red glowing effect */
+            z-index: 10; /* Ensure it's above the canvas */
+        }
+        #muteToggleButton:hover {
+            background-color: #FF0000; /* Red background on hover */
+            color: #000000; /* Black text color on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.9); /* More intense glow on hover */
+        }
+
         @font-face {
             font-family: 'Creepster';
             src: url('assets/Creepster-Regular.ttf') format('truetype');
@@ -73,6 +93,11 @@
                 font-size: 18px;
                 padding: 12px 25px;
             }
+            #muteToggleButton {
+                font-size: 16px;
+                padding: 8px 16px;
+                right: 15px;
+            }
         }
 
         @media (max-width: 480px) {
@@ -80,12 +105,39 @@
                 font-size: 16px;
                 padding: 10px 20px;
             }
+            #muteToggleButton {
+                font-size: 14px;
+                padding: 6px 12px;
+                right: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
+    <button id="muteToggleButton" class="game-button">Mute</button>
+    
+    <script>
+        // Placeholder for the actual sound logic
+        let isMuted = false;
+
+        document.getElementById('muteToggleButton').addEventListener('click', function() {
+            isMuted = !isMuted; // Toggle the state
+            
+            if (isMuted) {
+                this.textContent = 'Unmute'; // Change button text
+                // In a real scenario, you'd call a function here like:
+                // window.muteGameSound(); 
+                console.log("Sound is Muted (Visual/Placeholder only)");
+            } else {
+                this.textContent = 'Mute'; // Change button text
+                // In a real scenario, you'd call a function here like:
+                // window.unmuteGameSound();
+                console.log("Sound is Unmuted (Visual/Placeholder only)");
+            }
+        });
+    </script>
     <script src="game.js"></script>
 </body>
 </html>
