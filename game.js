@@ -3,9 +3,9 @@ window.onload = function() {
     const ctx = canvas.getContext('2d');
     const restartButton = document.getElementById('restartButton');
     
-    // --- START MUTE BUTTON INTEGRATION (New Element) ---
+    // --- MUTE BUTTON INTEGRATION (New Element) ---
     const muteButton = document.getElementById('muteButton');
-    // --- END MUTE BUTTON INTEGRATION ---
+    // ---------------------------------------------
 
     canvas.width = 400;
     canvas.height = 600;
@@ -41,6 +41,7 @@ window.onload = function() {
     const ghostImage = new Image();
     ghostImage.src = 'assets/spriteghost.png';
 
+    // --- AUDIO ELEMENTS ---
     const themeMusic = new Audio('assets/theme.mp3');
     themeMusic.loop = true;
     themeMusic.volume = 0.2;
@@ -54,8 +55,8 @@ window.onload = function() {
     const readySound = new Audio('assets/ready.ogg');
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
-
-    // --- START MUTE BUTTON INTEGRATION (Audio Grouping and Function) ---
+    
+    // --- MUTE BUTTON INTEGRATION (Audio Grouping and Function) ---
     // Group all controllable audio elements
     const allAudioElements = [
         themeMusic, 
@@ -68,7 +69,6 @@ window.onload = function() {
         endMusic
     ];
     
-    // Track the global mute state
     let isGloballyMuted = false;
 
     function updateMuteState(isMuted) {
@@ -97,16 +97,14 @@ window.onload = function() {
     
     // Add the event listener to the button
     muteButton.addEventListener('click', toggleMute);
-    // --- END MUTE BUTTON INTEGRATION ---
-
+    // ------------------------------------------------------------------
 
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
-    document.removeEventListener('touchstart', unlockAudio); // Added touchstart listener
+    document.removeEventListener('touchstart', unlockAudio);
     document.removeEventListener('keydown', unlockAudio);
 
-    // Attempt to play intro and theme music
-    // We only try to play if we are *not* globally muted
+    // Only attempt to play music if we are *not* currently muted
     if (!isGloballyMuted) {
         introMusic.play().catch(err => console.error("Intro music error:", err));
         themeMusic.play().catch(err => console.error("Theme music error:", err));
@@ -114,39 +112,139 @@ function unlockAudio() {
 
     // Initialize Media Session on first audio unlock
     if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = 'playing'; // Assume playing after unlock
+        navigator.mediaSession.playbackState = 'playing';
     }
 }
     document.addEventListener('click', unlockAudio);
     document.addEventListener('touchstart', unlockAudio);
     document.addEventListener('keydown', unlockAudio);
-    
-    // ... (rest of your existing code remains the same)
-    
-    // You should also remove the direct themeMusic.play() call from your unlockAudio function 
-    // to prevent immediate, full-volume playback on the first interaction if it's supposed 
-    // to start later in showGoScreen(). I've updated unlockAudio above to handle this.
-    
-    // The rest of the functions (startGame, showReadyScreen, showGoScreen, resetGame, etc.)
-    // will now inherit the current mute state because we are setting the `muted` property 
-    // on the Audio objects themselves.
 
-    // ... (rest of your existing code continues here) ...
+    const blocks = [];
+    const blockWidth = 50;
+    const blockHeight = 15;
+    const blockSpacing = 200;
 
-// **The rest of your functions are fine as they are.** // For example, in `gameLoop`:
-/*
-    if (isGameOver) {
-        // ...
-        endMusic.play(); // This will respect the current mute state!
-        // ...
-        themeMusic.pause(); // This still works as expected
-        // ...
-        return;
+    let imagesLoaded = 0;
+    playerImageRight.onload = playerImageLeft.onload = playerImageJump.onload = boneImage.onload = selectedBoneImage.onload = ghostImage.onload = function() {
+        imagesLoaded++;
+        if (imagesLoaded === 6) {
+            startGame();
+        }
+    };
+
+    const baseTempo = 1.0;
+    const tempoIncreaseFactor = 1.0;
+    let themeMusicStartTime = null;
+
+    function startGame() {
+        initializeStars();
+        showReadyScreen();
     }
-*/
+
+function showReadyScreen() {
+    // Stop theme music if it's playing
+    themeMusic.pause();
+    themeMusic.currentTime = 0; 
+    themeMusic.volume = 0.2;
+
+    // Update Media Session state
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Creepster';
+    ctx.textAlign = 'center';
+
+    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+    ctx.shadowBlur = 15;
+
+    ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
+
+    ctx.shadowColor = 'transparent';
+
+    readySound.play();
+    setTimeout(() => {
+        showGoScreen();
+    }, 2000);
+}
+
+function showGoScreen() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'red';
+    ctx.font = '40px Creepster';
+    ctx.textAlign = 'center';
+
+    ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
+    ctx.shadowBlur = 15;
+
+    ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
+
+    goSound.play();
+    setTimeout(() => {
+        resetGame();
+        introMusic.pause();
+        introMusic.currentTime = 0; 
+        themeMusic.currentTime = 0; 
+        themeMusic.play();
+        themeMusicStartTime = performance.now(); 
+        themeMusic.volume = 0.2; 
+        themeMusic.playbackRate = 1.0; 
+
+        // Update Media Session state
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = 'playing';
+        }
+
+        requestAnimationFrame(gameLoop);
+    }, 1000);
+
+    ctx.shadowColor = 'transparent';
+}
+
+function resetGame() {
+    isGameOver = false;
+    gameSpeed = 0.5;
+    score = 0;
+    souls = 0;
+    playerX = canvas.width / 2 - playerWidth / 2;
+    playerY = canvas.height / 2 - playerHeight / 2;
+    playerVelocityY = 0;
+    playerVelocityX = 0;
+    blocks.length = 0;
+    ghostObject = null;
+    generateInitialBlocks();
+    restartButton.style.display = 'none';
+
+    // Reset theme music settings
+    themeMusic.currentTime = 0; 
+    themeMusic.playbackRate = 1.0; 
+
+    // Update Media Session state
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'paused';
+    }
+}
+
+    function generateInitialBlocks() {
+        for (let i = 0; i < 5; i++) {
+            generateBlock(canvas.height - i * blockSpacing);
+        }
+    }
 
     function generateBlock() {
-        // ...
+        if (blocks.length === 0 || blocks[blocks.length - 1].y > blockSpacing) {
+            const block = {
+                x: Math.random() * (canvas.width - blockWidth),
+                y: -blockHeight,
+                width: blockWidth,
+                height: blockHeight,
+                hit: false,
+                missed: false
+            };
+            blocks.push(block);
+        }
     }
 
     let jumpRequested = false;
@@ -175,8 +273,7 @@ function unlockAudio() {
             jumpRequested = false;
         }
     });
-    
-    // (Existing canvas touch listeners)
+
     canvas.addEventListener('touchstart', function(e) {
         e.preventDefault();
         const touch = e.touches[0];
@@ -221,9 +318,7 @@ function unlockAudio() {
 
                 if (gameSpeed < maxSpeed) {
                     gameSpeed += 0.0075;
-                    // Note: Volume scaling still works fine, but the output 
-                    // will be silent if `isGloballyMuted` is true.
-                    themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3); 
+                    themeMusic.volume = Math.min(0.5, 0.2 + (gameSpeed / maxSpeed) * 0.3);
                 }
 
                 if (!ghostObject) {
@@ -237,7 +332,7 @@ function unlockAudio() {
                         dy: -2
                     };
                     ghostSound.currentTime = 0;
-                    ghostSound.play(); // Now plays when ghost appears
+                    ghostSound.play(); 
                 }
             }
         });
@@ -261,7 +356,7 @@ function unlockAudio() {
     function gameLoop(timestamp) {
         if (isGameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            dieSound.play(); // Changed to dieSound for better context
+            dieSound.play();
             endMusic.play();
 
             // Update Media Session state
@@ -291,7 +386,7 @@ function unlockAudio() {
             ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
             ctx.font = '14px Creepster';
             ctx.fillText('If notifications, try "Do Not Disturb"', canvas.width / 2, canvas.height / 2 + 90);
-            ctx.font = '12px Creepster'; // Slightly smaller font for the credit
+            ctx.font = '12px Creepster'; 
             ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 110);
 
             restartButton.style.display = 'block';
@@ -415,102 +510,4 @@ function unlockAudio() {
         resetGame();
         startGame();
     });
-    
-    function showReadyScreen() {
-        // Stop theme music if it's playing
-        themeMusic.pause();
-        themeMusic.currentTime = 0; // Reset the time to the beginning
-        themeMusic.volume = 0.2; // Ensure the volume is set to the correct level
-
-        // Update Media Session state
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = 'paused';
-        }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
-
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
-
-        ctx.fillText('Ready', canvas.width / 2, canvas.height / 2);
-
-        ctx.shadowColor = 'transparent';
-
-        readySound.play();
-        setTimeout(() => {
-            showGoScreen();
-        }, 2000);
-    }
-
-    function showGoScreen() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = 'red';
-        ctx.font = '40px Creepster';
-        ctx.textAlign = 'center';
-
-        ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
-        ctx.shadowBlur = 15;
-
-        ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
-
-        goSound.play();
-        setTimeout(() => {
-            resetGame();
-            introMusic.pause();
-            introMusic.currentTime = 0; // Reset the intro music time
-            themeMusic.currentTime = 0; // Ensure theme music starts fresh
-            themeMusic.play();
-            themeMusicStartTime = performance.now(); // Reset the theme music start time
-            themeMusic.volume = 0.2; // Ensure proper volume
-            themeMusic.playbackRate = 1.0; // Reset playback speed to normal
-
-            // Update Media Session state
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.playbackState = 'playing';
-            }
-
-            requestAnimationFrame(gameLoop);
-        }, 1000);
-
-        ctx.shadowColor = 'transparent';
-    }
-
-    function resetGame() {
-        isGameOver = false;
-        gameSpeed = 0.5;
-        score = 0;
-        souls = 0;
-        playerX = canvas.width / 2 - playerWidth / 2;
-        playerY = canvas.height / 2 - playerHeight / 2;
-        playerVelocityY = 0;
-        playerVelocityX = 0;
-        blocks.length = 0;
-        ghostObject = null;
-        generateInitialBlocks();
-        restartButton.style.display = 'none';
-
-        // Reset theme music settings
-        themeMusic.currentTime = 0; // Start from the beginning when we reset
-        themeMusic.playbackRate = 1.0; // Reset playback rate to normal speed
-
-        // Update Media Session state
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.playbackState = 'paused';
-        }
-    }
-
-    function generateInitialBlocks() {
-        for (let i = 0; i < 5; i++) {
-            generateBlock(canvas.height - i * blockSpacing);
-        }
-    }
-
-
-    function startGame() {
-        initializeStars();
-        showReadyScreen();
-    }
 };
