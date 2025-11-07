@@ -5,8 +5,12 @@ window.onload = function() {
     
     // --- MUTE ICON CONFIGURATION ---
     const MUTE_ICON_X = 10;
-    const MUTE_ICON_Y = 60; 
+    // Define the Y coordinate for the TOP EDGE of the clickable hitbox (under 'Souls' count)
+    const MUTE_ICON_CLICK_Y = 45; 
     const MUTE_ICON_SIZE = 25;
+    // The drawing function needs the baseline Y, which is slightly lower than the top edge
+    // Adjusted to align the visible icon with the new hitbox area
+    const MUTE_ICON_DRAW_Y = MUTE_ICON_CLICK_Y + MUTE_ICON_SIZE * 0.9;
     // -------------------------------
 
     canvas.width = 400;
@@ -78,17 +82,13 @@ window.onload = function() {
         // Toggle the 'muted' property on *all* audio elements
         allAudioElements.forEach(audio => {
             audio.muted = isMuted;
-            // When unmuting, ensure music is still paused if the game isn't running
-            if (!isMuted && !isGameOver && audio === themeMusic && themeMusic.paused) {
-                 // Do nothing here, music will be played in showGoScreen/unlockAudio
-            }
         });
     }
 
     function toggleMute() {
         updateMuteState(!isGloballyMuted);
 
-        // Crucial fix: If we are unmuting AND the game has started, resume theme music
+        // Crucial: If we are unmuting AND the theme music was paused (and is not at the start), resume it
         if (!isGloballyMuted && !isGameOver && themeMusic.paused && themeMusic.currentTime > 0) {
             themeMusic.play().catch(err => console.error("Theme music resume error:", err));
         }
@@ -290,8 +290,8 @@ function resetGame() {
         if (
             touchX >= MUTE_ICON_X && 
             touchX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
-            touchY >= MUTE_ICON_Y && 
-            touchY <= MUTE_ICON_Y + MUTE_ICON_SIZE
+            touchY >= MUTE_ICON_CLICK_Y && 
+            touchY <= MUTE_ICON_CLICK_Y + MUTE_ICON_SIZE
         ) {
             // Let the dedicated click/touch listener handle the mute/unmute
             return; 
@@ -491,13 +491,14 @@ function resetGame() {
         ctx.shadowColor = ctx.fillStyle;
         ctx.shadowBlur = 8;
         
-        ctx.fillText(iconSymbol, MUTE_ICON_X, MUTE_ICON_Y);
+        // Use the new drawing Y position
+        ctx.fillText(iconSymbol, MUTE_ICON_X, MUTE_ICON_DRAW_Y); 
 
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
     }
 
-    // --- DEDICATED MUTE ICON CLICK/TOUCH LISTENER (Fixing the Glitch) ---
+    // --- DEDICATED MUTE ICON CLICK/TOUCH LISTENER (Fixing the Hitbox) ---
     function handleMuteClick(e) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -510,12 +511,12 @@ function resetGame() {
         const canvasX = (clientX - rect.left) * scaleX;
         const canvasY = (clientY - rect.top) * scaleY;
         
-        // Check if the click/touch occurred within the MUTE ICON area
+        // Check if the click/touch occurred within the CORRECTED MUTE ICON area
         if (
             canvasX >= MUTE_ICON_X && 
             canvasX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
-            canvasY >= MUTE_ICON_Y && 
-            canvasY <= MUTE_ICON_Y + MUTE_ICON_SIZE
+            canvasY >= MUTE_ICON_CLICK_Y && // Top boundary of the hitbox
+            canvasY <= MUTE_ICON_CLICK_Y + MUTE_ICON_SIZE // Bottom boundary of the hitbox
         ) {
             toggleMute();
             e.preventDefault(); 
