@@ -5,13 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phantom Leap</title>
     
-    <!-- Favicon and icons -->
     <link rel="icon" href="https://raw.githubusercontent.com/srg774/Phantom-Leap/refs/heads/main/assets/favicon.ico" type="image/x-icon">
     <link rel="apple-touch-icon" sizes="180x180" href="https://srg774.github.io/Phantom-Leap/assets/apple-touch-icon.png">
     <link rel="apple-touch-startup-image" href="https://srg774.github.io/Phantom-Leap/assets/startup-image.png">
     <link rel="manifest" href="https://srg774.github.io/Phantom-Leap/manifest.json">
 
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Phantom Leap Game">
     <meta property="og:description" content="Take a leap of faith">
     <meta property="og:image" content="https://raw.githubusercontent.com/srg774/Phantom-Leap/7add468e4f8c082e4dcb0433ad2fa9c5c50cf9e7/assets/media.png">
@@ -19,12 +17,11 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Phantom Leap">
 
-    <!-- Additional Meta Tags for Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Phantom Leap Game">
     <meta name="twitter:description" content="Take a leap of faith">
     <meta name="twitter:image" content="https://raw.githubusercontent.com/srg774/Phantom-Leap/7add468e4f8c082e4dcb0433ad2fa9c5c50cf9e7/assets/media.png">
-    <meta name="twitter:site" content="@YourTwitterHandle"> <!-- Replace with your Twitter handle if desired -->
+    <meta name="twitter:site" content="@YourTwitterHandle">
 
     <style>
         body {
@@ -62,6 +59,32 @@
             transform: translateX(-50%) scale(1.05); /* Slightly enlarge on hover */
             box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
         }
+        
+        /* --- MUTE BUTTON STYLING (NEW) --- */
+        #muteButton {
+            position: fixed;
+            top: 20px;
+            right: 20px; /* Position it on the top-right corner */
+            padding: 15px 30px;
+            font-size: 22px;
+            background-color: #000000;
+            color: #00FF00;
+            border: 3px solid #00FF00;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            font-family: 'Creepster', sans-serif;
+        }
+
+        #muteButton:hover {
+            background-color: #00FF00;
+            color: #000000;
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
+        }
+        /* --------------------------------- */
+
         @font-face {
             font-family: 'Creepster';
             src: url('assets/Creepster-Regular.ttf') format('truetype');
@@ -69,14 +92,14 @@
 
         /* Responsive design */
         @media (max-width: 768px) {
-            #restartButton {
+            #restartButton, #muteButton {
                 font-size: 18px;
                 padding: 12px 25px;
             }
         }
 
         @media (max-width: 480px) {
-            #restartButton {
+            #restartButton, #muteButton {
                 font-size: 16px;
                 padding: 10px 20px;
             }
@@ -86,6 +109,9 @@
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
+    
+    <button id="muteButton">🔇 Mute</button>
+    
     <script src="game.js"></script>
 </body>
 </html>
