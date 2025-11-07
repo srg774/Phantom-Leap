@@ -60,31 +60,6 @@
             box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
         }
         
-        /* --- MUTE BUTTON STYLING (NEW) --- */
-        #muteButton {
-            position: fixed;
-            top: 20px;
-            right: 20px; /* Position it on the top-right corner */
-            padding: 15px 30px;
-            font-size: 22px;
-            background-color: #000000;
-            color: #00FF00;
-            border: 3px solid #00FF00;
-            border-radius: 8px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
-            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-            font-family: 'Creepster', sans-serif;
-        }
-
-        #muteButton:hover {
-            background-color: #00FF00;
-            color: #000000;
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(0, 255, 0, 0.9);
-        }
-        /* --------------------------------- */
-
         @font-face {
             font-family: 'Creepster';
             src: url('assets/Creepster-Regular.ttf') format('truetype');
@@ -92,14 +67,14 @@
 
         /* Responsive design */
         @media (max-width: 768px) {
-            #restartButton, #muteButton {
+            #restartButton {
                 font-size: 18px;
                 padding: 12px 25px;
             }
         }
 
         @media (max-width: 480px) {
-            #restartButton, #muteButton {
+            #restartButton {
                 font-size: 16px;
                 padding: 10px 20px;
             }
@@ -109,8 +84,6 @@
 <body>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
     <button id="restartButton">Restart</button>
-    
-    <button id="muteButton">🔇 Mute</button>
     
     <script src="game.js"></script>
 </body>
