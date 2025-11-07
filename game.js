@@ -1,3 +1,24 @@
+// Flag to track the global mute state
+let isGameMuted = false;
+
+/**
+ * Toggles the mute state for all game audio elements.
+ * @param {boolean} muteState - true to mute, false to unmute.
+ */
+window.toggleGameMute = function(muteState) {
+    isGameMuted = muteState;
+    console.log(`Game mute state set to: ${isGameMuted}`);
+};
+
+// Global function to set the volume of a specific audio object
+window.setAudioVolume = function(audioElement, newVolume) {
+    if (audioElement && isGameMuted) {
+        audioElement.volume = 0; // If muted, always set to 0 regardless of input
+    } else if (audioElement) {
+        audioElement.volume = newVolume;
+    }
+}
+
 window.onload = function() {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
