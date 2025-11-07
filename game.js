@@ -58,7 +58,7 @@ window.onload = function() {
     const goSound = new Audio('assets/go.ogg');
     const endMusic = new Audio('assets/end.mp3');
     
-    // --- MUTE INTEGRATION ---
+    // --- MUTE INTEGRATION Logic ---
     const allAudioElements = [
         themeMusic, 
         introMusic, 
@@ -75,23 +75,34 @@ window.onload = function() {
     function updateMuteState(isMuted) {
         isGloballyMuted = isMuted;
 
+        // Toggle the 'muted' property on *all* audio elements
         allAudioElements.forEach(audio => {
             audio.muted = isMuted;
+            // When unmuting, ensure music is still paused if the game isn't running
+            if (!isMuted && !isGameOver && audio === themeMusic && themeMusic.paused) {
+                 // Do nothing here, music will be played in showGoScreen/unlockAudio
+            }
         });
     }
 
     function toggleMute() {
         updateMuteState(!isGloballyMuted);
+
+        // Crucial fix: If we are unmuting AND the game has started, resume theme music
+        if (!isGloballyMuted && !isGameOver && themeMusic.paused && themeMusic.currentTime > 0) {
+            themeMusic.play().catch(err => console.error("Theme music resume error:", err));
+        }
     }
     
     updateMuteState(false);
-    // ------------------------
+    // -----------------------------
 
 function unlockAudio() {
     document.removeEventListener('click', unlockAudio);
     document.removeEventListener('touchstart', unlockAudio);
     document.removeEventListener('keydown', unlockAudio);
 
+    // Only attempt to play music if we are *not* currently muted
     if (!isGloballyMuted) {
         introMusic.play().catch(err => console.error("Intro music error:", err));
         themeMusic.play().catch(err => console.error("Theme music error:", err));
@@ -128,9 +139,12 @@ function unlockAudio() {
     }
 
 function showReadyScreen() {
-    themeMusic.pause();
+    // If not muted, pause the theme music gracefully for the ready sequence
+    if (!isGloballyMuted) {
+        themeMusic.pause();
+    }
     themeMusic.currentTime = 0; 
-    themeMusic.volume = 0.2;
+    themeMusic.volume = 0.2; 
 
     if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
@@ -148,7 +162,10 @@ function showReadyScreen() {
 
     ctx.shadowColor = 'transparent';
 
-    readySound.play();
+    if (!isGloballyMuted) {
+        readySound.play();
+    }
+    
     setTimeout(() => {
         showGoScreen();
     }, 2000);
@@ -165,13 +182,20 @@ function showGoScreen() {
 
     ctx.fillText('Go', canvas.width / 2, canvas.height / 2);
 
-    goSound.play();
+    if (!isGloballyMuted) {
+        goSound.play();
+    }
+    
     setTimeout(() => {
         resetGame();
         introMusic.pause();
         introMusic.currentTime = 0; 
         themeMusic.currentTime = 0; 
-        themeMusic.play();
+
+        if (!isGloballyMuted) {
+            themeMusic.play();
+        }
+        
         themeMusicStartTime = performance.now(); 
         themeMusic.volume = 0.2; 
         themeMusic.playbackRate = 1.0; 
@@ -242,7 +266,7 @@ function resetGame() {
                 jump();
                 jumpRequested = true;
                 currentPlayerImage = playerImageJump;
-                jumpSound.play();
+                if (!isGloballyMuted) jumpSound.play();
             }
         }
     });
@@ -254,67 +278,48 @@ function resetGame() {
             jumpRequested = false;
         }
     });
-    
-    // --- FIXED: CONSOLIDATED INPUT HANDLER FOR MUTE ICON AND PLAYER MOVEMENT ---
-    function handleInput(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
 
-        // Get touch/click position relative to the canvas
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
-        const canvasX = (clientX - rect.left) * scaleX;
-        const canvasY = (clientY - rect.top) * scaleY;
-        
-        // 1. Mute Icon Click Check (Hitbox priority)
+    // --- REVERTED TOUCH LOGIC FOR MOVEMENT (AS REQUESTED) ---
+    canvas.addEventListener('touchstart', function(e) {
+        // First, check if the touch was on the mute icon (handled in the dedicated listener below)
+        const rect = canvas.getBoundingClientRect();
+        const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+        const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+
+        // If the touch is within the mute icon area, DO NOT proceed with movement
         if (
-            canvasX >= MUTE_ICON_X && 
-            canvasX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
-            canvasY >= MUTE_ICON_Y && 
-            canvasY <= MUTE_ICON_Y + MUTE_ICON_SIZE
+            touchX >= MUTE_ICON_X && 
+            touchX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
+            touchY >= MUTE_ICON_Y && 
+            touchY <= MUTE_ICON_Y + MUTE_ICON_SIZE
         ) {
-            toggleMute();
-            e.preventDefault(); 
-            e.stopPropagation(); // Stop event propagation to prevent triggering default browser behavior
+            // Let the dedicated click/touch listener handle the mute/unmute
             return; 
         }
-        
-        // 2. Player Movement/Jump Logic (Only run for touchstart/click events)
-        if (e.type === 'touchstart' || e.type === 'click') {
-            e.preventDefault();
-            
-            // Determine player movement direction
-            if (canvasX < canvas.width / 2) {
-                playerVelocityX = -playerSpeed;
-                currentPlayerImage = playerImageLeft;
-            } else {
-                playerVelocityX = playerSpeed;
-                currentPlayerImage = playerImageRight;
-            }
-            
-            // Handle jump request
-            if (!jumpRequested) {
-                jump();
-                jumpRequested = true;
-                currentPlayerImage = playerImageJump;
-                jumpSound.play();
-            }
-        }
-        
-        // 3. Touch End Handling (for releasing movement)
-        if (e.type === 'touchend') {
-            playerVelocityX = 0;
-            jumpRequested = false;
-        }
-    }
 
-    // Attach the new consolidated handler to all relevant events:
-    canvas.addEventListener('click', handleInput);
-    canvas.addEventListener('touchstart', handleInput);
-    canvas.addEventListener('touchend', handleInput); 
-    // -------------------------------------------------------------------------
+        e.preventDefault();
+        const touch = e.touches[0];
+        
+        // This is the original logic for movement/jump
+        if (touch.clientX < canvas.width / 2) {
+            playerVelocityX = -playerSpeed;
+            currentPlayerImage = playerImageLeft;
+        } else {
+            playerVelocityX = playerSpeed;
+            currentPlayerImage = playerImageRight;
+        }
+        if (!jumpRequested) {
+            jump();
+            jumpRequested = true;
+            currentPlayerImage = playerImageJump;
+            if (!isGloballyMuted) jumpSound.play();
+        }
+    });
+
+    canvas.addEventListener('touchend', function(e) {
+        playerVelocityX = 0;
+        jumpRequested = false;
+    });
 
     function jump() {
         playerVelocityY = -jumpStrength;
@@ -350,8 +355,10 @@ function resetGame() {
                         dx: direction * 2,
                         dy: -2
                     };
-                    ghostSound.currentTime = 0;
-                    ghostSound.play(); 
+                    if (!isGloballyMuted) {
+                        ghostSound.currentTime = 0;
+                        ghostSound.play();
+                    }
                 }
             }
         });
@@ -360,11 +367,17 @@ function resetGame() {
     function checkGameOver() {
         if (playerY > canvas.height) {
             isGameOver = true;
+            if (!isGloballyMuted) {
+                dieSound.play();
+            }
         }
         blocks.forEach(block => {
             if (block.y > canvas.height && !block.hit) {
                 block.missed = true;
                 isGameOver = true;
+                if (!isGloballyMuted) {
+                    dieSound.play();
+                }
             }
         });
     }
@@ -375,9 +388,12 @@ function resetGame() {
     function gameLoop(timestamp) {
         if (isGameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            dieSound.play();
-            endMusic.play();
+            
+            if (!isGloballyMuted) {
+                endMusic.play();
+            }
 
+            // Update Media Session state
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.playbackState = 'paused';
             }
@@ -447,20 +463,19 @@ function resetGame() {
             themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
         }
 
-        // --- DRAW UI ELEMENTS ---
         ctx.fillStyle = 'red';
         ctx.font = '20px Creepster';
         ctx.textAlign = 'left';
 
-        // Draw Souls Count
         ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         ctx.shadowBlur = 15;
+
         ctx.fillText('Souls: ' + souls, 10, 30);
-        ctx.shadowColor = 'transparent'; // Reset shadow
+
+        ctx.shadowColor = 'transparent';
 
         // Draw Mute Icon
         drawMuteIcon();
-        // ------------------------
 
         requestAnimationFrame(gameLoop);
     }
@@ -481,6 +496,35 @@ function resetGame() {
         ctx.shadowBlur = 0;
         ctx.shadowColor = 'transparent';
     }
+
+    // --- DEDICATED MUTE ICON CLICK/TOUCH LISTENER (Fixing the Glitch) ---
+    function handleMuteClick(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        // Get touch/click position relative to the canvas
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const canvasX = (clientX - rect.left) * scaleX;
+        const canvasY = (clientY - rect.top) * scaleY;
+        
+        // Check if the click/touch occurred within the MUTE ICON area
+        if (
+            canvasX >= MUTE_ICON_X && 
+            canvasX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
+            canvasY >= MUTE_ICON_Y && 
+            canvasY <= MUTE_ICON_Y + MUTE_ICON_SIZE
+        ) {
+            toggleMute();
+            e.preventDefault(); 
+            e.stopPropagation();
+        }
+    }
+    canvas.addEventListener('click', handleMuteClick);
+    canvas.addEventListener('touchstart', handleMuteClick);
+    // ----------------------------------------------------------------------
 
 
     let starData = [];
