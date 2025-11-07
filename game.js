@@ -3,9 +3,12 @@ window.onload = function() {
     const ctx = canvas.getContext('2d');
     const restartButton = document.getElementById('restartButton');
     
-    // --- MUTE BUTTON INTEGRATION (New Element) ---
-    const muteButton = document.getElementById('muteButton');
-    // ---------------------------------------------
+    // --- MUTE ICON CONFIGURATION ---
+    // Position the icon near the top-left, slightly below the "Souls" text (which is at y=30)
+    const MUTE_ICON_X = 10;
+    const MUTE_ICON_Y = 60; 
+    const MUTE_ICON_SIZE = 25;
+    // -------------------------------
 
     canvas.width = 400;
     canvas.height = 600;
@@ -74,17 +77,11 @@ window.onload = function() {
     function updateMuteState(isMuted) {
         isGloballyMuted = isMuted;
 
-        // 1. Toggle the 'muted' property on *all* audio elements
+        // Toggle the 'muted' property on *all* audio elements
         allAudioElements.forEach(audio => {
             audio.muted = isMuted;
         });
-
-        // 2. Update the button text to reflect the *new* state (Foolproof visual update)
-        if (isMuted) {
-            muteButton.innerHTML = '🔊 Unmute'; // Display 'Unmute' when it IS muted
-        } else {
-            muteButton.innerHTML = '🔇 Mute'; // Display 'Mute' when it IS NOT muted
-        }
+        // Note: No need to update button text, the draw function handles the icon state
     }
 
     function toggleMute() {
@@ -92,11 +89,8 @@ window.onload = function() {
         updateMuteState(!isGloballyMuted);
     }
     
-    // Initialize button state (default to unmuted)
+    // Initialize mute state (default to unmuted)
     updateMuteState(false);
-    
-    // Add the event listener to the button
-    muteButton.addEventListener('click', toggleMute);
     // ------------------------------------------------------------------
 
 function unlockAudio() {
@@ -142,12 +136,10 @@ function unlockAudio() {
     }
 
 function showReadyScreen() {
-    // Stop theme music if it's playing
     themeMusic.pause();
     themeMusic.currentTime = 0; 
     themeMusic.volume = 0.2;
 
-    // Update Media Session state
     if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
     }
@@ -192,7 +184,6 @@ function showGoScreen() {
         themeMusic.volume = 0.2; 
         themeMusic.playbackRate = 1.0; 
 
-        // Update Media Session state
         if ('mediaSession' in navigator) {
             navigator.mediaSession.playbackState = 'playing';
         }
@@ -217,11 +208,9 @@ function resetGame() {
     generateInitialBlocks();
     restartButton.style.display = 'none';
 
-    // Reset theme music settings
     themeMusic.currentTime = 0; 
     themeMusic.playbackRate = 1.0; 
 
-    // Update Media Session state
     if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'paused';
     }
@@ -273,11 +262,48 @@ function resetGame() {
             jumpRequested = false;
         }
     });
+    
+    // --- NEW: HANDLE CLICK/TOUCH ON CANVAS TO MUTE ---
+    function handleCanvasClick(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
 
+        // Get touch/click position relative to the canvas
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        const canvasX = (clientX - rect.left) * scaleX;
+        const canvasY = (clientY - rect.top) * scaleY;
+        
+        // Check if the click/touch occurred within the MUTE ICON area
+        if (
+            canvasX >= MUTE_ICON_X && 
+            canvasX <= MUTE_ICON_X + MUTE_ICON_SIZE && 
+            canvasY >= MUTE_ICON_Y && 
+            canvasY <= MUTE_ICON_Y + MUTE_ICON_SIZE
+        ) {
+            toggleMute();
+            // Prevent other canvas click handlers (like movement/jump) from triggering
+            e.preventDefault(); 
+            e.stopPropagation();
+        }
+    }
+
+    canvas.addEventListener('click', handleCanvasClick);
+    canvas.addEventListener('touchstart', handleCanvasClick);
+
+    // Keep the existing jump/movement logic for touches outside the icon area
     canvas.addEventListener('touchstart', function(e) {
+        // Check if the event was already handled by the mute button logic
+        if (e.defaultPrevented) return;
+
         e.preventDefault();
         const touch = e.touches[0];
-        if (touch.clientX < canvas.width / 2) {
+        // Calculate canvas coordinates (simplified for movement, based on half the canvas)
+        const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+
+        if (touchX < canvas.width / 2) {
             playerVelocityX = -playerSpeed;
             currentPlayerImage = playerImageLeft;
         } else {
@@ -300,6 +326,8 @@ function resetGame() {
     function jump() {
         playerVelocityY = -jumpStrength;
     }
+    // ---------------------------------------------------
+
 
     let ghostObject = null;
 
@@ -359,7 +387,6 @@ function resetGame() {
             dieSound.play();
             endMusic.play();
 
-            // Update Media Session state
             if ('mediaSession' in navigator) {
                 navigator.mediaSession.playbackState = 'paused';
             }
@@ -429,19 +456,46 @@ function resetGame() {
             themeMusic.playbackRate = baseTempo + (gameSpeed / maxSpeed) * tempoIncrease;
         }
 
+        // --- DRAW UI ELEMENTS ---
         ctx.fillStyle = 'red';
         ctx.font = '20px Creepster';
         ctx.textAlign = 'left';
 
+        // Draw Souls Count
         ctx.shadowColor = 'rgba(0, 255, 0, 0.8)';
         ctx.shadowBlur = 15;
-
         ctx.fillText('Souls: ' + souls, 10, 30);
+        ctx.shadowColor = 'transparent'; // Reset shadow
 
-        ctx.shadowColor = 'transparent';
+        // Draw Mute Icon (Calls the new function)
+        drawMuteIcon();
+        // ------------------------
 
         requestAnimationFrame(gameLoop);
     }
+
+    // --- NEW: CANVAS DRAW MUTE ICON FUNCTION ---
+    function drawMuteIcon() {
+        ctx.font = `${MUTE_ICON_SIZE}px sans-serif`; // Use standard font for the Unicode symbol
+        ctx.textAlign = 'left';
+        
+        const iconSymbol = isGloballyMuted ? '🔇' : '🔊'; // Toggle symbol
+        
+        ctx.fillStyle = isGloballyMuted ? '#FF0000' : '#00FF00'; // Red when muted, green when unmuted
+        
+        // Add a slight glow effect for visibility
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = 8;
+        
+        // Draw the icon
+        ctx.fillText(iconSymbol, MUTE_ICON_X, MUTE_ICON_Y);
+
+        // Reset shadows and color so they don't affect other drawings
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+    }
+    // -------------------------------------------
+
 
     let starData = [];
 
