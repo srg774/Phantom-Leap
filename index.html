@@ -36,10 +36,9 @@
             margin: 0 auto; /* Center the canvas horizontally */
         }
         
-        /* General button styling */
+        /* General button styling for both buttons */
         .game-button {
             position: fixed;
-            padding: 10px 20px;
             font-size: 18px;
             background-color: #000000;
             border-radius: 8px;
@@ -66,14 +65,15 @@
             box-shadow: 0 0 25px rgba(0, 255, 0, 0.9); /* More intense glow on hover */
         }
 
-        /* Mute/Unmute Button Styling (New) */
+        /* Mute/Unmute Button Styling (NEW RED THEME) */
         #muteToggleButton {
             top: 20px;
             right: 20px; /* Position on the top right */
+            padding: 10px 20px;
             color: #FF0000; /* Red text color */
             border: 3px solid #FF0000; /* Red border */
             box-shadow: 0 0 15px rgba(255, 0, 0, 0.7); /* Red glowing effect */
-            z-index: 10; /* Ensure it's above the canvas */
+            z-index: 10;
         }
         #muteToggleButton:hover {
             background-color: #FF0000; /* Red background on hover */
@@ -119,7 +119,7 @@
     <button id="muteToggleButton" class="game-button">Mute</button>
     
     <script>
-        // Placeholder for the actual sound logic
+        // HTML-side logic to track state and call the game.js function
         let isMuted = false;
 
         document.getElementById('muteToggleButton').addEventListener('click', function() {
@@ -127,14 +127,16 @@
             
             if (isMuted) {
                 this.textContent = 'Unmute'; // Change button text
-                // In a real scenario, you'd call a function here like:
-                // window.muteGameSound(); 
-                console.log("Sound is Muted (Visual/Placeholder only)");
+                // Call the global function exposed by game.js
+                if (window.toggleGameMute) {
+                    window.toggleGameMute(true); 
+                }
             } else {
                 this.textContent = 'Mute'; // Change button text
-                // In a real scenario, you'd call a function here like:
-                // window.unmuteGameSound();
-                console.log("Sound is Unmuted (Visual/Placeholder only)");
+                // Call the global function exposed by game.js
+                if (window.toggleGameMute) {
+                    window.toggleGameMute(false);
+                }
             }
         });
     </script>
