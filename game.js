@@ -421,7 +421,7 @@ function resetGame() {
             ctx.font = '14px Creepster';
             ctx.fillText('If notifications, try "Do Not Disturb"', canvas.width / 2, canvas.height / 2 + 90);
             ctx.font = '12px Creepster'; 
-            ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 110);
+            ctx.fillText('By SRG774 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 110);
 
             restartButton.style.display = 'block';
             ctx.shadowColor = 'transparent';
