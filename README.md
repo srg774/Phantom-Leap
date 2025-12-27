@@ -57,7 +57,7 @@ Due to browser restrictions on autoplaying audio, the game waits for a user inte
 
 ## 🧙 Credits
 
-Created by **S. Gilchrist (2024)**  
+Created by **SRG774 (2024)**  
 Licensed under **Creative Commons CC-BY-NC 4.0**  
 This means you can remix, tweak, and build upon this work non-commercially, and although your new works must also acknowledge the original creator, you don’t have to license your derivative works on the same terms.
 
