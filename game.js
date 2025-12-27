@@ -418,10 +418,10 @@ function resetGame() {
             ctx.font = '20px Creepster';
             ctx.fillText(endMessage, canvas.width / 2, canvas.height / 2 - 20);
             ctx.fillText('Souls: ' + souls, canvas.width / 2, canvas.height / 2 + 20);
+            ctx.font = '14px Creepster';
+            ctx.fillText('If notifications, try "Do Not Disturb"', canvas.width / 2, canvas.height / 2 + 90);
             ctx.font = '12px Creepster'; 
-            ctx.fillText('© 2024 [Your Name]. SRG774 2025 All Rights Reserved.
-
-Software, original artwork, and game design are the property of the creator. Music, sound effects, and character sprites were sourced via OpenGameArt.org under the CC0 (Public Domain) license. Coffin asset generated via Craiyon AI.', canvas.width / 2, canvas.height / 2 + 110);
+            ctx.fillText('By S.Gilchrist 2024 CC-BY-NC 4.0', canvas.width / 2, canvas.height / 2 + 110);
 
             restartButton.style.display = 'block';
             ctx.shadowColor = 'transparent';
