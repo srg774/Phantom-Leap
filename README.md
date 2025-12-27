@@ -57,9 +57,9 @@ Due to browser restrictions on autoplaying audio, the game waits for a user inte
 
 ## 🧙 Credits
 
-© 2024 [SRG774]. All Rights Reserved.
-
-Software, original artwork, and game design are the property of the creator. Music, sound effects, and character sprites were sourced via OpenGameArt.org under the CC0 (Public Domain) license. Coffin asset generated via Craiyon AI.
+Created by **S. Gilchrist (2024)**  
+Licensed under **Creative Commons CC-BY-NC 4.0**  
+This means you can remix, tweak, and build upon this work non-commercially, and although your new works must also acknowledge the original creator, you don’t have to license your derivative works on the same terms.
 
 ## 🧪 Known Issues
 
